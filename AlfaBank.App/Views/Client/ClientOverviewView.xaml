@@ -1,0 +1,81 @@
+<UserControl x:Class="AlfaBank.App.Views.Client.ClientOverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:AlfaBank.App.Converters"
+             Background="{StaticResource SurfaceBrush}">
+
+    <UserControl.Resources>
+        <converters:DateTimeConverter x:Key="DateTimeConverter" />
+    </UserControl.Resources>
+
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Мои кредиты и заявки" Style="{StaticResource PageHeaderStyle}" />
+
+            <UniformGrid Rows="1" Margin="0,0,0,16">
+                <Border Style="{StaticResource SummaryCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Заявок всего" Foreground="#555555" />
+                        <TextBlock Text="{Binding ApplicationsTotalCount}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="На рассмотрении" Foreground="#555555" />
+                        <TextBlock Text="{Binding ApplicationsNewCount}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Одобрено заявок" Foreground="#555555" />
+                        <TextBlock Text="{Binding ApplicationsApprovedCount}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Действующих кредитов" Foreground="#555555" />
+                        <TextBlock Text="{Binding ActiveCreditsCount}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Остаток долга, ₽" Foreground="#555555" />
+                        <TextBlock Text="{Binding RemainingDebtTotal, StringFormat='{}{0:N2}'}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCardStyle}" Margin="0">
+                    <StackPanel>
+                        <TextBlock Text="Внесено, ₽" Foreground="#555555" />
+                        <TextBlock Text="{Binding PaidTotal, StringFormat='{}{0:N2}'}" FontSize="22" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <TextBlock Text="Мои заявки" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+            <DataGrid ItemsSource="{Binding Applications}"
+                      Style="{StaticResource DataGridHeaderStyle}"
+                      MaxHeight="330">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="50" />
+                    <DataGridTextColumn Header="Продукт" Binding="{Binding ProductName}" Width="2*" />
+                    <DataGridTextColumn Header="Сумма, ₽" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="*" />
+                    <DataGridTextColumn Header="Срок, мес." Binding="{Binding TermMonths}" Width="90" />
+                    <DataGridTextColumn Header="Платёж, ₽" Binding="{Binding MonthlyPayment, StringFormat='{}{0:N2}'}" Width="*" />
+                    <DataGridTextColumn Header="Статус" Binding="{Binding StatusText}" Width="*" />
+                    <DataGridTextColumn Header="Подана" Binding="{Binding CreatedAt, Converter={StaticResource DateTimeConverter}}" Width="110" />
+                    <DataGridTextColumn Header="Комментарий банка" Binding="{Binding DecisionComment}" Width="2*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Style="{StaticResource StatusMessageStyle}" Text="{Binding StatusMessage}" />
+        </StackPanel>
+
+        <Button DockPanel.Dock="Bottom"
+                Content="Обновить данные"
+                HorizontalAlignment="Left"
+                Margin="0,12,0,0"
+                Style="{StaticResource SecondaryButtonStyle}"
+                Command="{Binding ReloadCommand}" />
+    </DockPanel>
+</UserControl>

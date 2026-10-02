@@ -1,0 +1,21 @@
+<Project>
+
+  <!--
+    Общие настройки сборки для всех проектов решения «Альфабанк».
+    Файл подключается автоматически ко всем проектам в каталоге решения.
+  -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!--
+      Позволяет собирать проекты net8.0-windows (WPF) на машине с Linux/macOS.
+      На Windows свойство не влияет на сборку.
+    -->
+    <EnableWindowsTargeting Condition="'$(OS)' != 'Windows_NT'">true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>

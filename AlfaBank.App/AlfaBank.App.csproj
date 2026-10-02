@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    AlfaBank.App — приложение Windows Presentation Foundation:
+    слой представления (MVVM) поверх библиотеки AlfaBank.Core.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>AlfaBank.App</RootNamespace>
+    <AssemblyName>AlfaBank.App</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AlfaBank.Core\AlfaBank.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,166 @@
+<UserControl x:Class="AlfaBank.App.Views.Specialist.ApplicationReviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:AlfaBank.App.Converters"
+             Background="{StaticResource SurfaceBrush}">
+
+    <UserControl.Resources>
+        <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+        <converters:DateTimeConverter x:Key="DateTimeConverter" />
+    </UserControl.Resources>
+
+    <DockPanel Margin="16">
+        <TextBlock DockPanel.Dock="Top"
+                   Text="Проверка кредитной заявки"
+                   Style="{StaticResource PageHeaderStyle}" />
+
+        <TextBlock DockPanel.Dock="Bottom"
+                   Style="{StaticResource StatusMessageStyle}"
+                   Text="{Binding StatusMessage}" />
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="White"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="18"
+                    Margin="0,0,12,0">
+                <StackPanel>
+                    <TextBlock Text="Данные клиента"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,10" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="ФИО клиента" Foreground="#555555" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Application.ClientFullName}" FontWeight="SemiBold" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Паспорт" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Application.PassportNumber}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Дата рождения" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Application.BirthDate, Converter={StaticResource DateOnlyConverter}}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Возраст, лет" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Application.AgeYears}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Адрес регистрации" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Application.RegistrationAddress}" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Место работы" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Application.EmployerName}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Стаж, мес." Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Application.EmploymentMonths}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Доход, ₽" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Application.MonthlyIncome, StringFormat='{}{0:N2}'}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Расходы, ₽" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Application.MonthlyExpenses, StringFormat='{}{0:N2}'}" Margin="0,6,0,0" />
+                    </Grid>
+
+                    <TextBlock Text="Параметры кредита"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Margin="0,18,0,10" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Продукт" Foreground="#555555" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Application.ProductName}" FontWeight="SemiBold" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Сумма кредита, ₽" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Application.Amount, StringFormat='{}{0:N2}'}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Ставка, % годовых" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Application.AnnualInterestRate}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Срок, мес." Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Application.TermMonths}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Ежемесячный платёж, ₽" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Application.MonthlyPayment, StringFormat='{}{0:N2}'}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Статус заявки" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Application.StatusText}" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Дата подачи" Foreground="#555555" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Application.CreatedAt, Converter={StaticResource DateTimeConverter}}" Margin="0,6,0,0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="White"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="18">
+                <StackPanel>
+                    <TextBlock Text="Автоматическая проверка"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,10" />
+
+                    <Border Background="{StaticResource SurfaceBrush}"
+                            CornerRadius="4"
+                            Padding="12"
+                            Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="{Binding ScorePointsText}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding PaymentShareText}" Margin="0,4,0,0" />
+                            <TextBlock Text="{Binding ScoreConclusion}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Замечания" Foreground="#555555" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Reasons}" Margin="0,0,0,12">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="Комментарий специалиста" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Text="{Binding DecisionComment, UpdateSourceTrigger=PropertyChanged}"
+                             Height="90"
+                             Padding="6,5"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             Margin="0,0,0,12" />
+
+                    <StackPanel>
+                        <Button Content="Одобрить и открыть кредит"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding ApproveCommand}"
+                                IsEnabled="{Binding CanDecide}"
+                                Margin="0,0,0,8" />
+
+                        <Button Content="Отклонить заявку"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding RejectCommand}"
+                                IsEnabled="{Binding CanDecide}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>
