@@ -7,6 +7,7 @@ public abstract class ViewModelBase : ObservableObject
 {
     private bool _isBusy;
     private string _statusMessage = string.Empty;
+    private StatusMessageKind _statusKind = StatusMessageKind.Info;
 
     /// <summary>
     /// Признак выполнения длительной операции. Используется для блокировки элементов интерфейса.
@@ -23,7 +24,44 @@ public abstract class ViewModelBase : ObservableObject
     public string StatusMessage
     {
         get => _statusMessage;
-        set => SetProperty(ref _statusMessage, value);
+        set
+        {
+            if (SetProperty(ref _statusMessage, value))
+            {
+                // Любое новое сообщение по умолчанию нейтрально: цвет выбирается явно
+                // через ShowError или ShowSuccess, чтобы ошибка не «залипала» на экране.
+                StatusKind = StatusMessageKind.Info;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Характер последнего сообщения: определяет его цвет в интерфейсе.
+    /// </summary>
+    public StatusMessageKind StatusKind
+    {
+        get => _statusKind;
+        private set => SetProperty(ref _statusKind, value);
+    }
+
+    /// <summary>
+    /// Показывает сообщение об ошибке или неблагоприятном исходе.
+    /// </summary>
+    /// <param name="message">Текст сообщения.</param>
+    protected void ShowError(string message)
+    {
+        StatusMessage = message;
+        StatusKind = StatusMessageKind.Error;
+    }
+
+    /// <summary>
+    /// Показывает сообщение об успешном результате действия.
+    /// </summary>
+    /// <param name="message">Текст сообщения.</param>
+    protected void ShowSuccess(string message)
+    {
+        StatusMessage = message;
+        StatusKind = StatusMessageKind.Success;
     }
 
     /// <summary>
@@ -31,7 +69,7 @@ public abstract class ViewModelBase : ObservableObject
     /// </summary>
     /// <param name="exception">Исключение, возникшее при выполнении операции.</param>
     protected void ReportUnexpectedError(Exception exception) =>
-        StatusMessage = $"Непредвиденная ошибка при обращении к базе данных: {exception.Message}";
+        ShowError($"Непредвиденная ошибка при обращении к базе данных: {exception.Message}");
 
     /// <summary>
     /// Выполняет асинхронную операцию, устанавливая признак занятости и обрабатывая ошибки.

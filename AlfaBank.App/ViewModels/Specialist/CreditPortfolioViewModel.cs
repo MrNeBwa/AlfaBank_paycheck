@@ -112,7 +112,7 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
             {
                 if (value is not null)
                 {
-                    PaymentAmountText = value.PaymentAmount.ToString("0.##");
+                    PaymentAmountText = value.PaymentAmount.ToString("0.00");
                     PaymentDateText = DateTime.Today.ToString(PaymentDateFormat, CultureInfo.InvariantCulture);
                 }
 
@@ -169,12 +169,21 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         {
             var credits = await _specialistService.GetCreditsAsync(SearchText.Trim());
 
+            // Выбранный кредит запоминается по номеру: после перезагрузки списка
+            // он должен остаться выделенным, иначе после регистрации платежа
+            // специалист терял открытый график.
+            var previousCreditId = SelectedCredit?.Id;
+
             Credits.Clear();
 
             foreach (var credit in credits)
             {
                 Credits.Add(credit);
             }
+
+            SelectedCredit = previousCreditId is null
+                ? null
+                : Credits.FirstOrDefault(credit => credit.Id == previousCreditId);
 
             StatusMessage = $"Загружено кредитов: {Credits.Count}.";
         });
@@ -200,7 +209,7 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
 
             if (!scheduleResult.IsSuccess || scheduleResult.Value is null)
             {
-                StatusMessage = scheduleResult.ErrorMessage;
+                ShowError(scheduleResult.ErrorMessage);
             }
             else
             {
@@ -246,11 +255,11 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
 
         if (!result.IsSuccess)
         {
-            StatusMessage = result.ErrorMessage;
+            ShowError(result.ErrorMessage);
             return;
         }
 
-        StatusMessage = $"Платёж по плану № {SelectedScheduleItem.Number} зарегистрирован.";
+        ShowSuccess($"Платёж по плану № {SelectedScheduleItem.Number} зарегистрирован.");
         PaymentComment = string.Empty;
 
         await ReloadAsync();
@@ -272,21 +281,28 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         && SelectedScheduleItem is not null
         && SelectedScheduleItem.Status != ScheduleItemStatus.Paid
         && ParsePaymentAmount() > 0m
-        && TryParsePaymentDate();
+        && TryParsePaymentDate()
+        && ParsePaymentAmount() >= 0.01m;
 
     /// <summary>
     /// Разбирает введённую дату платежа.
     /// </summary>
     /// <returns>Дата платежа. При ошибке ввода возвращается текущая дата.</returns>
     private DateOnly ParsePaymentDate() =>
-        TryParsePaymentDate() ? DateOnly.ParseExact(PaymentDateText, PaymentDateFormat) : DateOnly.FromDateTime(DateTime.Today);
+        TryParsePaymentDate()
+            ? DateOnly.ParseExact(PaymentDateText, PaymentDateFormat)
+            : DateOnly.FromDateTime(DateTime.Today);
 
     /// <summary>
     /// Разбирает введённую сумму платежа.
     /// </summary>
     /// <returns>Сумма платежа в рублях.</returns>
     private decimal ParsePaymentAmount() =>
-        decimal.TryParse(PaymentAmountText, out var amount) ? amount : 0m;
+        decimal.TryParse(PaymentAmountText, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount)
+            ? amount
+            : decimal.TryParse(PaymentAmountText, NumberStyles.Any, CultureInfo.CurrentCulture, out amount)
+                ? amount
+                : 0m;
 
     /// <summary>
     /// Проверяет корректность введённой даты платежа.

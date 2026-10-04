@@ -2,16 +2,20 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:AlfaBank.App.Converters"
+             xmlns:infra="clr-namespace:AlfaBank.App.Infrastructure"
              Background="{StaticResource SurfaceBrush}">
 
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+        <converters:StatusToBrushConverter x:Key="StatusToBrush" />
     </UserControl.Resources>
 
     <DockPanel Margin="16">
-        <TextBlock DockPanel.Dock="Top"
-                   Text="Графики платежей по кредитам"
-                   Style="{StaticResource PageHeaderStyle}" />
+        <Border DockPanel.Dock="Top" Style="{StaticResource PageHeaderBarStyle}">
+            <TextBlock Text="Графики платежей по кредитам"
+                       Style="{StaticResource PageHeaderStyle}"
+                       Margin="0" />
+        </Border>
 
         <Grid>
             <Grid.RowDefinitions>
@@ -38,7 +42,7 @@
                           ItemsSource="{Binding Credits}"
                           SelectedItem="{Binding SelectedCredit}"
                           DisplayMemberPath="ProductName"
-                          Padding="6,5" />
+                          Style="{StaticResource InputComboBoxStyle}" />
 
                 <Button Grid.Column="2"
                         Content="Показать график"
@@ -54,6 +58,7 @@
 
             <DataGrid Grid.Row="2"
                       ItemsSource="{Binding ScheduleItems}"
+                      infra:ClearSelection.IsEnabled="True"
                       Style="{StaticResource DataGridHeaderStyle}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="№" Binding="{Binding Number}" Width="50" />
@@ -62,7 +67,15 @@
                     <DataGridTextColumn Header="Проценты, ₽" Binding="{Binding InterestAmount, StringFormat='{}{0:N2}'}" Width="*" />
                     <DataGridTextColumn Header="Основной долг, ₽" Binding="{Binding PrincipalAmount, StringFormat='{}{0:N2}'}" Width="*" />
                     <DataGridTextColumn Header="Остаток, ₽" Binding="{Binding RemainingDebt, StringFormat='{}{0:N2}'}" Width="*" />
-                    <DataGridTextColumn Header="Статус" Binding="{Binding StatusText}" Width="*" />
+                    <DataGridTemplateColumn Header="Статус" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StatusText}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Факт. оплата" Binding="{Binding PaidOn, Converter={StaticResource DateOnlyConverter}}" Width="120" />
                 </DataGrid.Columns>
             </DataGrid>

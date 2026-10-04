@@ -2,10 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:AlfaBank.App.Converters"
+             xmlns:infra="clr-namespace:AlfaBank.App.Infrastructure"
              Background="{StaticResource SurfaceBrush}">
 
     <UserControl.Resources>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <converters:BooleanToStatusBrushConverter x:Key="ActiveBrush" />
     </UserControl.Resources>
 
 
@@ -16,10 +18,11 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-                       Text="Управление пользователями"
-                       Style="{StaticResource PageHeaderStyle}"
-                       Margin="0" />
+            <Border Grid.Column="0" Style="{StaticResource PageHeaderBarStyle}">
+                            <TextBlock Text="Управление пользователями"
+                                       Style="{StaticResource PageHeaderStyle}"
+                                       Margin="0" />
+                        </Border>
 
             <Button Grid.Column="1"
                     Content="Обновить список"
@@ -42,78 +45,157 @@
                       Margin="0,0,12,0"
                       ItemsSource="{Binding Users}"
                       SelectedItem="{Binding SelectedUser}"
+                      infra:ClearSelection.IsEnabled="True"
                       Style="{StaticResource DataGridHeaderStyle}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="50" />
                     <DataGridTextColumn Header="Логин" Binding="{Binding Login}" Width="*" />
                     <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="2*" />
                     <DataGridTextColumn Header="Роль" Binding="{Binding RoleText}" Width="*" />
-                    <DataGridCheckBoxColumn Header="Активен" Binding="{Binding IsActive}" Width="80" />
+                    <DataGridTemplateColumn Header="Активен" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="да"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding IsActive, Converter={StaticResource ActiveBrush}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 
-            <Border Grid.Column="1"
-                    Background="White"
-                    BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="16">
+            <!-- Прокрутка формы: в невысоком окне кнопки сохранения иначе не видны. -->
+            <ScrollViewer Grid.Column="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Style="{StaticResource SummaryCardStyle}"
+                        Margin="0"
+                        Padding="16">
                 <StackPanel>
                     <TextBlock Text="Данные пользователя"
-                               FontSize="15"
-                               FontWeight="SemiBold" />
+                               Style="{StaticResource SectionHeaderStyle}" />
 
-                    <TextBlock Margin="0,2,0,12"
-                               Foreground="#555555"
-                               Text="Заполните поля и нажмите «Зарегистрировать сотрудника»." />
+                    <!-- Показывает, создаётся новая учётная запись или редактируется существующая. -->
+                    <Border CornerRadius="6"
+                            Padding="10"
+                            Margin="0,2,0,12">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{StaticResource SuccessSurfaceBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditingExistingUser}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentLightBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding FormModeText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </Border>
 
                     <TextBlock Text="Логин" Style="{StaticResource FieldLabelStyle}" />
                     <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="6,5"
-                             IsEnabled="{Binding IsEditingExistingUser, Converter={StaticResource InverseBoolConverter}}"
+                             Style="{StaticResource InputBoxStyle}"
                              Margin="0,0,0,10" />
 
                     <TextBlock Text="ФИО" Style="{StaticResource FieldLabelStyle}" />
                     <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="6,5"
+                             Style="{StaticResource InputBoxStyle}"
                              Margin="0,0,0,10" />
 
                     <TextBlock Text="Роль" Style="{StaticResource FieldLabelStyle}" />
                     <ComboBox ItemsSource="{Binding Roles}"
                               SelectedItem="{Binding SelectedRole}"
                               DisplayMemberPath="Title"
-                              Padding="6,5"
+                              Style="{StaticResource InputComboBoxStyle}"
                               Margin="0,0,0,10" />
 
                     <TextBlock Text="Пароль" Style="{StaticResource FieldLabelStyle}" />
                     <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="6,5"
+                             Style="{StaticResource InputBoxStyle}"
                              Margin="0,0,0,4" />
 
-                    <TextBlock Text="При редактировании оставьте поле пустым, чтобы не менять пароль."
-                               TextWrapping="Wrap"
-                               Foreground="#777777"
+                    <TextBlock Text="Логин можно изменить при создании и при правке. Оставьте поле пароля пустым, чтобы не менять пароль."
+                               Style="{StaticResource HintStyle}"
                                Margin="0,0,0,10" />
+
+                    <!-- Анкета нужна только клиенту: без неё он не сможет подать заявку. -->
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsClientRoleSelected}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Анкета клиента"
+                                   Style="{StaticResource SectionHeaderStyle}"
+                                   Margin="0,4,0,8" />
+
+                        <TextBlock Text="Паспорт" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding PassportNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,10" />
+
+                        <TextBlock Text="Дата рождения" Style="{StaticResource FieldLabelStyle}" />
+                        <DatePicker SelectedDate="{Binding BirthDate, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource InputDatePickerStyle}"
+                                    Margin="0,0,0,10" />
+
+                        <TextBlock Text="Адрес регистрации" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding RegistrationAddress, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,10" />
+
+                        <TextBlock Text="Место работы" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding EmployerName, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,10" />
+
+                        <TextBlock Text="Стаж, мес." Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding EmploymentMonths, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,10" />
+
+                        <TextBlock Text="Доход в месяц, ₽" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding MonthlyIncome, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,10" />
+
+                        <TextBlock Text="Расходы в месяц, ₽" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox Text="{Binding MonthlyExpenses, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource InputBoxStyle}"
+                                 Margin="0,0,0,4" />
+
+                        <TextBlock Text="Доход и расходы определяют показатель долговой нагрузки при проверке заявки."
+                                   Style="{StaticResource HintStyle}"
+                                   Margin="0,0,0,10" />
+                    </StackPanel>
 
                     <CheckBox Content="Учётная запись активна"
                               IsChecked="{Binding IsActive}"
                               Margin="0,0,0,14" />
 
-                    <Button Content="Зарегистрировать сотрудника"
+                    <Button Content="Зарегистрировать пользователя"
                             Style="{StaticResource PrimaryButtonStyle}"
                             Command="{Binding RegisterCommand}"
+                            IsEnabled="{Binding IsEditingExistingUser, Converter={StaticResource InverseBoolConverter}}"
                             Margin="0,0,0,8" />
 
                     <Button Content="Сохранить изменения"
                             Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding IsEditingExistingUser}"
                             Margin="0,0,0,8" />
 
-                    <Button Content="Очистить форму"
+                    <Button Content="Новая учётная запись"
                             Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding ClearCommand}" />
                 </StackPanel>
-            </Border>
+                </Border>
+            </ScrollViewer>
         </Grid>
     </DockPanel>
 </UserControl>

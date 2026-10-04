@@ -41,42 +41,54 @@
     </Window.Resources>
 
     <DockPanel>
-        <Border DockPanel.Dock="Top" Background="{StaticResource AccentBrush}">
-            <Grid Margin="16,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <Border DockPanel.Dock="Top">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Offset="0" Color="{StaticResource BrandRedDarkColor}" />
+                        <GradientStop Offset="1" Color="{StaticResource BrandRedColor}" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid Margin="18,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Альфабанк"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Foreground="White" />
-                    <TextBlock Text="— автоматизированная система кредитования"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="#D6E4F0" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="4"
+                                Height="26"
+                                CornerRadius="2"
+                                Background="White"
+                                Margin="0,0,10,0" />
+                        <TextBlock Text="Альфабанк"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="— автоматизированная система кредитования"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FBDDDE" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="{Binding UserFullName}"
-                               VerticalAlignment="Center"
-                               Foreground="White"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding UserRole}"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="#D6E4F0" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UserFullName}"
+                                       Foreground="White"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding UserRole}"
+                                       Foreground="#FBDDDE"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </StackPanel>
 
-                <Button Grid.Column="2"
-                        Content="Выход"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding LogOutCommand}" />
-            </Grid>
-        </Border>
+                    <Button Grid.Column="2"
+                            Content="Выход"
+                            Style="{StaticResource HeaderButtonStyle}"
+                            Command="{Binding LogOutCommand}" />
+                </Grid>
+            </Border>
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -88,19 +100,54 @@
                      Margin="10"
                      ItemsSource="{Binding Items}"
                      SelectedItem="{Binding SelectedItem}"
-                     Background="White"
+                     Background="{StaticResource CardBrush}"
                      BorderBrush="{StaticResource BorderBrush}"
                      BorderThickness="1"
+                     Padding="4"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="10,9" />
+                        <Setter Property="Padding" Value="12,10" />
                         <Setter Property="Margin" Value="2" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="ItemBorder"
+                                            Background="Transparent"
+                                            CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BrandRedLightBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <!-- Выбранный пункт подсвечивается фирменным красным. -->
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BrandRedBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Title}" FontSize="14" />
+                        <TextBlock Text="{Binding Title}" FontSize="14">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#333333" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

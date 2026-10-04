@@ -39,7 +39,22 @@ public static class EntityMapper
         StatusTextProvider.GetRoleText(user.Role),
         user.IsActive,
         user.ClientProfile is not null,
-        user.CreatedAt);
+        user.CreatedAt,
+        user.ClientProfile is null ? null : ToClientProfileInput(user.ClientProfile));
+
+    /// <summary>
+    /// Преобразует анкету клиента в данные для формы администратора.
+    /// </summary>
+    /// <param name="profile">Анкета клиента.</param>
+    /// <returns>Данные анкеты.</returns>
+    private static ClientProfileInputDto ToClientProfileInput(ClientProfile profile) => new(
+        profile.PassportNumber,
+        profile.BirthDate,
+        profile.RegistrationAddress,
+        profile.EmployerName,
+        profile.EmploymentMonths,
+        profile.MonthlyIncome,
+        profile.MonthlyExpenses);
 
     /// <summary>
     /// Преобразует заявку в краткую карточку списка.
@@ -132,8 +147,15 @@ public static class EntityMapper
     /// <returns>Информация о кредите.</returns>
     public static CreditSummaryDto ToCreditSummaryDto(Credit credit, string clientFullName, string productName)
     {
-        var paidItems = credit.ScheduleItems.Where(item => item.Status == ScheduleItemStatus.Paid).ToList();
-        var nextItem = credit.ScheduleItems.FirstOrDefault(item => item.Status != ScheduleItemStatus.Paid);
+        // Entity Framework не гарантирует порядок загрузки коллекции,
+        // поэтому график обязательно упорядочивается по номеру платежа.
+        // Иначе «следующий платёж» и остаток долга выбирались бы произвольными.
+        var schedule = credit.ScheduleItems
+            .OrderBy(item => item.Number)
+            .ToList();
+
+        var paidItems = schedule.Where(item => item.Status == ScheduleItemStatus.Paid).ToList();
+        var nextItem = schedule.FirstOrDefault(item => item.Status != ScheduleItemStatus.Paid);
 
         return new CreditSummaryDto(
             credit.Id,
@@ -147,9 +169,9 @@ public static class EntityMapper
             credit.Status,
             StatusTextProvider.GetCreditStatusText(credit.Status),
             Sum(paidItems.Select(item => item.PaymentAmount)),
-            nextItem?.RemainingDebt ?? credit.ScheduleItems.LastOrDefault()?.RemainingDebt ?? 0m,
+            nextItem?.RemainingDebt ?? schedule.LastOrDefault()?.RemainingDebt ?? 0m,
             paidItems.Count,
-            credit.ScheduleItems.Count,
+            schedule.Count,
             nextItem?.DueDate,
             nextItem?.PaymentAmount ?? 0m);
     }

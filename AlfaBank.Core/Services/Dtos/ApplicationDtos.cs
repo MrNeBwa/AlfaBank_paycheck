@@ -90,20 +90,30 @@ public sealed record ApplicationDetailsDto(
 /// <param name="AgeYears">Возраст заёмщика в полных годах.</param>
 /// <param name="EmploymentMonths">Стаж работы в месяцах.</param>
 /// <param name="MonthlyIncome">Ежемесячный доход заёмщика.</param>
+/// <param name="MonthlyExpenses">Текущие ежемесячные расходы заёмщика.</param>
 /// <param name="HasOverduePayments">Признак наличия просроченных платежей по действующим кредитам.</param>
-public sealed record ScoringInput(int AgeYears, int EmploymentMonths, decimal MonthlyIncome, bool HasOverduePayments);
+public sealed record ScoringInput(
+    int AgeYears,
+    int EmploymentMonths,
+    decimal MonthlyIncome,
+    decimal MonthlyExpenses,
+    bool HasOverduePayments);
 
 /// <summary>
 /// Результат автоматической оценки заёмщика.
 /// </summary>
 /// <param name="ScorePoints">Итоговый балл от нуля до ста.</param>
-/// <param name="PaymentSharePercent">Доля платежа в ежемесячном доходе в процентах.</param>
+/// <param name="PaymentSharePercent">Доля платежа в свободных средствах (ПДР) в процентах.</param>
+/// <param name="DisposableIncome">Доход за вычетом текущих расходов, то есть свободные средства.</param>
+/// <param name="MonthlyPayment">Расчётный ежемесячный платёж по кредиту.</param>
 /// <param name="IsApproved">Признак соответствия заёмщика правилам выдачи кредита.</param>
 /// <param name="Conclusion">Итоговый вывод по заёмщику на русском языке.</param>
 /// <param name="Reasons">Список замечаний по результатам проверки.</param>
 public sealed record ScoringResultDto(
     int ScorePoints,
     decimal PaymentSharePercent,
+    decimal DisposableIncome,
+    decimal MonthlyPayment,
     bool IsApproved,
     string Conclusion,
     IReadOnlyList<string> Reasons);

@@ -12,7 +12,7 @@ public static class BankConstants
     public const int PasswordMinimumLength = 6;
 
     /// <summary>
-    /// Максимально допустимая доля платежа по кредиту в ежемесячном доходе (ПДР), %.
+    /// Максимально допустимая доля платежа по кредиту в свободных средствах (ПДР), %.
     /// </summary>
     public const decimal PaymentShareMaximumPercent = 50m;
 
@@ -60,4 +60,21 @@ public static class BankConstants
     /// Количество знаков после запятой у денежных сумм.
     /// </summary>
     public const int MoneyScaleDigits = 2;
+
+    /// <summary>
+    /// Допустимое расхождение денежных сумм при сверке, руб.
+    /// </summary>
+    public const decimal MoneyTolerance = 0.01m;
+
+    /// <summary>
+    /// Порог «жёлтой» зоны показателя долговой нагрузки (ПДР), %.
+    /// </summary>
+    public const decimal PaymentShareWarningPercent = 35m;
+
+    /// <summary>
+    /// Максимально допустимая процентная ставка по кредиту, % годовых.
+    /// Ограничение защищает расчёт аннуитета: при экстремальной ставке
+    /// накопленный множитель переполняется и расчёт падает.
+    /// </summary>
+    public const decimal InterestRateMaximumPercent = 100m;
 }

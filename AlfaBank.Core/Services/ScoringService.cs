@@ -13,15 +13,21 @@ public sealed class ScoringService : IScoringService
     public ScoringResultDto Evaluate(ScoringInput input, decimal monthlyPayment)
     {
         var reasons = new List<string>();
-        var scorePoints = CalculateScorePoints(input, monthlyPayment, reasons);
-        var paymentSharePercent = CalculatePaymentSharePercent(input.MonthlyIncome, monthlyPayment);
-        var isPaymentShareAcceptable = paymentSharePercent <= BankConstants.PaymentShareMaximumPercent;
+
+        // Долговая нагрузка оценивается от свободных средств, а не от всего дохода:
+        // текущие расходы заёмщика уменьшаются наравне с платежом по кредиту.
+        var disposableIncome = CalculateDisposableIncome(input);
+
+        var scorePoints = CalculateScorePoints(input, disposableIncome, monthlyPayment, reasons);
+        var paymentSharePercent = CalculatePaymentSharePercent(disposableIncome, monthlyPayment);
+        var isPaymentShareAcceptable = paymentSharePercent <= BankConstants.PaymentShareMaximumPercent + 0.0001m;
 
         if (!isPaymentShareAcceptable)
         {
             reasons.Add(
-                $"Платеж по кредиту составляет {paymentSharePercent:0.##}% дохода " +
-                $"(допустимо не более {BankConstants.PaymentShareMaximumPercent:0.##}%).");
+                $"Платёж по кредиту составляет {paymentSharePercent:F1}% свободных средств " +
+                $"(доход {input.MonthlyIncome:F2} руб. − расходы {input.MonthlyExpenses:F2} руб. = " +
+                $"{disposableIncome:F2} руб., допустимо не более {BankConstants.PaymentShareMaximumPercent:F0}%).");
         }
 
         var isApproved = isPaymentShareAcceptable && scorePoints >= BankConstants.ScoreMinimumToApprove;
@@ -29,19 +35,38 @@ public sealed class ScoringService : IScoringService
         return new ScoringResultDto(
             scorePoints,
             paymentSharePercent,
+            disposableIncome,
+            monthlyPayment,
             isApproved,
             BuildConclusion(scorePoints, isApproved),
             reasons);
     }
 
     /// <summary>
+    /// Рассчитывает свободные средства заёмщика: ежемесячный доход за вычетом расходов.
+    /// </summary>
+    /// <param name="input">Данные заёмщика.</param>
+    /// <returns>Свободные средства в месяц.</returns>
+    private static decimal CalculateDisposableIncome(ScoringInput input)
+    {
+        var disposableIncome = input.MonthlyIncome - Math.Max(0m, input.MonthlyExpenses);
+
+        return disposableIncome < 0m ? 0m : disposableIncome;
+    }
+
+    /// <summary>
     /// Начисляет баллы за каждый выполненный критерий и формирует список замечаний.
     /// </summary>
     /// <param name="input">Данные заёмщика.</param>
+    /// <param name="disposableIncome">Свободные средства заёмщика после текущих расходов.</param>
     /// <param name="monthlyPayment">Ежемесячный платёж по кредиту.</param>
     /// <param name="reasons">Коллекция, в которую добавляются замечания.</param>
     /// <returns>Итоговый балл скоринга.</returns>
-    private static int CalculateScorePoints(ScoringInput input, decimal monthlyPayment, ICollection<string> reasons)
+    private static int CalculateScorePoints(
+        ScoringInput input,
+        decimal disposableIncome,
+        decimal monthlyPayment,
+        ICollection<string> reasons)
     {
         var scorePoints = 0;
 
@@ -65,14 +90,14 @@ public sealed class ScoringService : IScoringService
                         $"(требуется не менее {BankConstants.EmploymentMinimumMonths} мес.).");
         }
 
-        if (IsIncomeAcceptable(input.MonthlyIncome, monthlyPayment))
+        if (IsIncomeAcceptable(disposableIncome, monthlyPayment))
         {
             scorePoints += BankConstants.ScorePointsPerCriterion;
         }
         else
         {
-            reasons.Add($"Доход клиента не покрывает {BankConstants.IncomePaymentsCoverCount:0} " +
-                        "ежемесячных платежей по кредиту.");
+            reasons.Add($"Свободные средства после расходов ({disposableIncome:0.##} руб.) не покрывают " +
+                        $"{BankConstants.IncomePaymentsCoverCount:0} ежемесячных платежей по кредиту.");
         }
 
         if (!input.HasOverduePayments)
@@ -96,28 +121,30 @@ public sealed class ScoringService : IScoringService
         ageYears >= BankConstants.AgeMinimumYears && ageYears <= BankConstants.AgeMaximumYears;
 
     /// <summary>
-    /// Проверяет, что доход покрывает требуемое количество платежей по кредиту.
+    /// Проверяет, что свободные средства покрывают требуемое количество платежей по кредиту.
     /// </summary>
-    /// <param name="monthlyIncome">Ежемесячный доход заёмщика.</param>
+    /// <param name="disposableIncome">Свободные средства заёмщика после текущих расходов.</param>
     /// <param name="monthlyPayment">Ежемесячный платёж по кредиту.</param>
-    /// <returns>Значение, если доход достаточен.</returns>
-    private static bool IsIncomeAcceptable(decimal monthlyIncome, decimal monthlyPayment) =>
-        monthlyIncome >= monthlyPayment * BankConstants.IncomePaymentsCoverCount;
+    /// <returns>Значение, если свободных средств достаточно.</returns>
+    private static bool IsIncomeAcceptable(decimal disposableIncome, decimal monthlyPayment) =>
+        disposableIncome >= monthlyPayment * BankConstants.IncomePaymentsCoverCount;
 
     /// <summary>
-    /// Рассчитывает показатель долговой нагрузки: долю платежа в ежемесячном доходе.
+    /// Рассчитывает показатель долговой нагрузки: долю платежа в свободных средствах.
     /// </summary>
-    /// <param name="monthlyIncome">Ежемесячный доход заёмщика.</param>
+    /// <param name="disposableIncome">Свободные средства заёмщика после текущих расходов.</param>
     /// <param name="monthlyPayment">Ежемесячный платёж по кредиту.</param>
     /// <returns>Значение ПДР в процентах.</returns>
-    private static decimal CalculatePaymentSharePercent(decimal monthlyIncome, decimal monthlyPayment)
+    private static decimal CalculatePaymentSharePercent(decimal disposableIncome, decimal monthlyPayment)
     {
-        if (monthlyIncome <= 0m)
+        if (disposableIncome <= 0m)
         {
-            return 100m;
+            // Свободных средств нет: нагрузка предельная, заявка отклоняется.
+            return BankConstants.PercentFactor;
         }
 
-        return decimal.Round(monthlyPayment / monthlyIncome * BankConstants.PercentFactor, 2, MidpointRounding.AwayFromZero);
+        var result = monthlyPayment / disposableIncome * BankConstants.PercentFactor;
+        return result > BankConstants.PercentFactor * 1000m ? BankConstants.PercentFactor : decimal.Round(result, 2, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

@@ -76,7 +76,7 @@ public sealed class LoginViewModel : ViewModelBase
 
         if (!result.IsSuccess)
         {
-            StatusMessage = result.ErrorMessage;
+            ShowError(result.ErrorMessage);
             return;
         }
 

@@ -4,74 +4,91 @@
         xmlns:infra="clr-namespace:AlfaBank.App.Infrastructure"
         Title="Автоматизированная система кредитования Альфабанка"
         Width="420"
-        Height="340"
+        Height="400"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen"
-        Background="{StaticResource SurfaceBrush}">
+        WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>
         <KeyBinding Key="Return" Command="{Binding SignInCommand}" />
     </Window.InputBindings>
 
+    <Window.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Offset="0" Color="{StaticResource BrandRedDarkColor}" />
+            <GradientStop Offset="1" Color="{StaticResource BrandRedColor}" />
+        </LinearGradientBrush>
+    </Window.Background>
+
     <Grid Margin="28,24,28,20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Border Background="{StaticResource CardBrush}"
+                CornerRadius="10"
+                Padding="26,22"
+                VerticalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Альфабанк"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Foreground="{StaticResource AccentDarkBrush}" />
+                <TextBlock Grid.Row="0"
+                           Text="Альфабанк"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource BrandRedBrush}" />
 
-        <TextBlock Grid.Row="1"
-                   Text="Вход в систему кредитования"
-                   Margin="0,4,0,20"
-                   Foreground="#555555" />
+                <TextBlock Grid.Row="1"
+                           Text="Вход в систему кредитования"
+                           Margin="0,4,0,18"
+                           Foreground="#555555" />
 
-        <TextBlock Grid.Row="2" Text="Логин" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="2" Text="Логин" Style="{StaticResource FieldLabelStyle}" />
 
-        <TextBox Grid.Row="3"
-                 Margin="0,0,0,14"
-                 Padding="6,5"
-                 BorderBrush="{StaticResource BorderBrush}"
-                 Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="3"
+                         Style="{StaticResource InputBoxStyle}"
+                         Margin="0,0,0,12"
+                         Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}" />
 
-        <TextBlock Grid.Row="4" Text="Пароль" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="4" Text="Пароль" Style="{StaticResource FieldLabelStyle}" />
 
-        <PasswordBox Grid.Row="5"
-                     Margin="0,0,0,18"
-                     Padding="6,5"
-                     BorderBrush="{StaticResource BorderBrush}"
-                     infra:PasswordBoxBinding.Password="{Binding Password}"
-                     infra:PasswordBoxBinding.MonitorChanges="True" />
+                <PasswordBox Grid.Row="5"
+                             Margin="0,0,0,16"
+                             Padding="8,6"
+                             BorderBrush="{StaticResource BorderBrush}"
+                             BorderThickness="1"
+                             Background="{StaticResource CardBrush}"
+                             infra:PasswordBoxBinding.Password="{Binding Password}"
+                             infra:PasswordBoxBinding.MonitorChanges="True" />
 
-        <StackPanel Grid.Row="6" Orientation="Horizontal">
-            <Button Content="Войти"
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    Command="{Binding SignInCommand}" />
+                <StackPanel Grid.Row="6" Orientation="Horizontal">
+                    <Button Content="Войти"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding SignInCommand}" />
 
-            <Button Content="Регистрация клиента"
-                    Margin="12,0,0,0"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    Click="OnRegisterClientClick" />
-        </StackPanel>
+                    <Button Content="Регистрация клиента"
+                            Margin="12,0,0,0"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="OnRegisterClientClick" />
+                </StackPanel>
 
-        <TextBlock Grid.Row="7"
-                   Style="{StaticResource StatusMessageStyle}"
-                   Text="{Binding StatusMessage}" />
+                <!-- Сообщение и подсказка занимают разные строки, иначе они накладываются друг на друга. -->
+                <TextBlock Grid.Row="7"
+                           Style="{StaticResource StatusMessageStyle}"
+                           Text="{Binding StatusMessage}" />
 
-        <TextBlock Grid.Row="7"
-                   Margin="0,28,0,0"
-                   Foreground="#777777"
-                   TextWrapping="Wrap"
-                   Text="Демонстрационные входы: client / Client2024, specialist / Specialist2024, administrator / Administrator2024" />
+                <TextBlock Grid.Row="8"
+                           Margin="0,14,0,0"
+                           Foreground="#7A8794"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Text="Демонстрационные входы: client / Client2024, specialist / Specialist2024, administrator / Administrator2024" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>

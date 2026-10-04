@@ -211,6 +211,11 @@ public sealed class AuthService : IAuthService
             return "Стаж работы не может быть отрицательным.";
         }
 
+        if (request.MonthlyExpenses < 0m)
+        {
+            return "Ежемесячные расходы не могут быть отрицательными.";
+        }
+
         return request.MonthlyIncome > 0m ? null : "Укажите ежемесячный доход.";
     }
 }

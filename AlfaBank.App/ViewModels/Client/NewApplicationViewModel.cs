@@ -41,7 +41,7 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         _overviewPage = overviewPage;
 
         Products = [];
-        SubmitCommand = new AsyncRelayCommand(SubmitAsync, onError: ReportUnexpectedError);
+        SubmitCommand = new AsyncRelayCommand(SubmitAsync, CanSubmit, onError: ReportUnexpectedError);
         LoadProductsCommand = new AsyncRelayCommand(LoadProductsAsync, onError: ReportUnexpectedError);
     }
 
@@ -144,6 +144,8 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
             {
                 SelectedProduct = Products.FirstOrDefault();
             }
+
+            SubmitCommand.RaiseCanExecuteChanged();
         });
     }
 
@@ -174,11 +176,11 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
 
         if (!result.IsSuccess)
         {
-            StatusMessage = result.ErrorMessage;
+            ShowError(result.ErrorMessage);
             return;
         }
 
-        StatusMessage = "Заявка отправлена на рассмотрение кредитному специалисту.";
+        ShowSuccess("Заявка отправлена на рассмотрение кредитному специалисту.");
         AmountText = string.Empty;
         TermText = string.Empty;
 
@@ -195,6 +197,29 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
             : _creditCalculator.CalculateMonthlyPayment(ParseAmount(), SelectedProduct.AnnualInterestRate, ParseTerm());
 
         SubmitCommand.RaiseCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Определяет, можно ли отправить заявку.
+    /// Кнопка отправки блокируется, пока продукт не выбран и данные не введены
+    /// в пределах лимитов продукта: раньше она выглядела доступной всегда,
+    /// но нажатие без данных не давало никакого результата.
+    /// </summary>
+    /// <returns>Значение, если заявка готова к отправке.</returns>
+    private bool CanSubmit()
+    {
+        if (SelectedProduct is null || !TryParseAmount() || !TryParseTerm())
+        {
+            return false;
+        }
+
+        var amount = ParseAmount();
+        var term = ParseTerm();
+
+        return amount >= SelectedProduct.MinAmount
+               && amount <= SelectedProduct.MaxAmount
+               && term >= SelectedProduct.MinTermMonths
+               && term <= SelectedProduct.MaxTermMonths;
     }
 
     /// <summary>

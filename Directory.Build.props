@@ -10,7 +10,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!--
+      Инвариантная глобализация отключена: приложение использует русскую культуру
+      (ru-RU) для форматов чисел и дат. В режиме InvariantGlobalization доступна
+      только инвариантная культура, и new CultureInfo("ru-RU") завершается
+      исключением CultureNotFoundException при запуске.
+    -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <!--
       Позволяет собирать проекты net8.0-windows (WPF) на машине с Linux/macOS.
       На Windows свойство не влияет на сборку.

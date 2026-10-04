@@ -14,12 +14,11 @@
     </Window.InputBindings>
 
     <DockPanel Margin="24">
-        <TextBlock DockPanel.Dock="Top"
-                   Text="Регистрация клиента"
-                   FontSize="20"
-                   FontWeight="Bold"
-                   Foreground="{StaticResource AccentDarkBrush}"
-                   Margin="0,0,0,4" />
+        <Border DockPanel.Dock="Top" Style="{StaticResource PageHeaderBarStyle}">
+            <TextBlock Text="Регистрация клиента"
+                       Style="{StaticResource PageHeaderStyle}"
+                       Margin="0" />
+        </Border>
 
         <TextBlock DockPanel.Dock="Top"
                    Text="После регистрации автоматически выполняется вход в личный кабинет."
@@ -32,58 +31,61 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="Учётная запись" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <TextBlock Text="Учётная запись" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,8" />
 
                 <TextBlock Text="Логин" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <TextBlock Text="Пароль" Style="{StaticResource FieldLabelStyle}" />
-                <PasswordBox Padding="6,5"
+                <PasswordBox Padding="8,6"
+                             BorderBrush="{StaticResource BorderBrush}"
+                             BorderThickness="1"
+                             Background="{StaticResource CardBrush}"
                              Margin="0,0,0,14"
                              infra:PasswordBoxBinding.Password="{Binding Password}"
                              infra:PasswordBoxBinding.MonitorChanges="True" />
 
-                <TextBlock Text="Анкета заёмщика" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <TextBlock Text="Анкета заёмщика" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,8" />
 
                 <TextBlock Text="ФИО" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <TextBlock Text="Серия и номер паспорта" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding PassportNumber, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <TextBlock Text="Дата рождения (ДД.ММ.ГГГГ)" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding BirthDateText, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <TextBlock Text="Адрес регистрации" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding RegistrationAddress, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <TextBlock Text="Место работы" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Text="{Binding EmployerName, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="6,5"
+                         Style="{StaticResource InputBoxStyle}"
                          Margin="0,0,0,10" />
 
                 <UniformGrid Columns="3" Margin="0,0,0,10">
                     <StackPanel Margin="0,0,5,0">
                         <TextBlock Text="Стаж, мес." Style="{StaticResource FieldLabelStyle}" />
-                        <TextBox Text="{Binding EmploymentMonthsText, UpdateSourceTrigger=PropertyChanged}" Padding="6,5" />
+                        <TextBox Text="{Binding EmploymentMonthsText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputBoxStyle}" />
                     </StackPanel>
                     <StackPanel Margin="5,0">
                         <TextBlock Text="Доход, ₽" Style="{StaticResource FieldLabelStyle}" />
-                        <TextBox Text="{Binding MonthlyIncomeText, UpdateSourceTrigger=PropertyChanged}" Padding="6,5" />
+                        <TextBox Text="{Binding MonthlyIncomeText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputBoxStyle}" />
                     </StackPanel>
                     <StackPanel Margin="5,0,0,0">
                         <TextBlock Text="Расходы, ₽" Style="{StaticResource FieldLabelStyle}" />
-                        <TextBox Text="{Binding MonthlyExpensesText, UpdateSourceTrigger=PropertyChanged}" Padding="6,5" />
+                        <TextBox Text="{Binding MonthlyExpensesText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputBoxStyle}" />
                     </StackPanel>
                 </UniformGrid>
 

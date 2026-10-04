@@ -170,7 +170,7 @@ public sealed class RegisterClientViewModel : ViewModelBase
 
         if (!result.IsSuccess || result.Value is null)
         {
-            StatusMessage = result.ErrorMessage;
+            ShowError(result.ErrorMessage);
             return;
         }
 

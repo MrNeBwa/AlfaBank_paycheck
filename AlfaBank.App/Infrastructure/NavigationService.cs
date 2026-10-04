@@ -17,14 +17,24 @@ public sealed class NavigationService : ObservableObject
     }
 
     /// <summary>
-    /// Открывает указанную страницу.
+    /// Открывает указанную страницу и загружает её данные.
     /// </summary>
+    /// <remarks>
+    /// Загрузка выполняется здесь, а не в точке вызова, чтобы страница,
+    /// открытая из другой страницы, не осталась пустой: без неё привязки
+    /// не наполняются, а кнопки решения остаются заблокированными.
+    /// </remarks>
     /// <param name="page">Модель представления открываемой страницы.</param>
     public void Navigate(object page)
     {
         ArgumentNullException.ThrowIfNull(page);
 
         CurrentPage = page;
+
+        if (page is IPageViewModel pageViewModel)
+        {
+            pageViewModel.LoadAsync().Forget();
+        }
     }
 
     /// <summary>

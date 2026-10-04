@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 
 namespace AlfaBank.App.Infrastructure;
@@ -93,6 +94,27 @@ public sealed class AsyncRelayCommand : ICommand
 
     /// <summary>
     /// Оповещает интерфейс о том, что условие доступности команды изменилось.
+    /// Если вызов пришёл не из потока интерфейса, уведомление переносится в него:
+    /// иначе привязанные элементы управления получат обращение из чужого потока
+    /// и приложение завершится с InvalidOperationException.
     /// </summary>
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public void RaiseCanExecuteChanged()
+    {
+        var handler = CanExecuteChanged;
+
+        if (handler is null)
+        {
+            return;
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(new Action(() => handler(this, EventArgs.Empty)));
+            return;
+        }
+
+        handler(this, EventArgs.Empty);
+    }
 }

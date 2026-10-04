@@ -137,7 +137,7 @@ public sealed class ClientOverviewViewModel : ViewModelBase, IPageViewModel
     {
         if (!overviewResult.IsSuccess || overviewResult.Value is null)
         {
-            StatusMessage = overviewResult.ErrorMessage;
+            ShowError(overviewResult.ErrorMessage);
             return;
         }
 

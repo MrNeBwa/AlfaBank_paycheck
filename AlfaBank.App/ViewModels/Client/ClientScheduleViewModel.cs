@@ -154,7 +154,7 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
 
             if (!result.IsSuccess || result.Value is null)
             {
-                StatusMessage = result.ErrorMessage;
+                ShowError(result.ErrorMessage);
                 return;
             }
 

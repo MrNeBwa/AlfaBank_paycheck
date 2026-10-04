@@ -80,6 +80,13 @@ public sealed class AdminService : IAdminService
             CreatedAt = DateTime.Now
         };
 
+        // Клиенту анкета нужна сразу: без неё он не сможет подать заявку на кредит,
+        // а заполнить её самостоятельно не может — отдельной страницы правки анкеты нет.
+        if (registration.Role == UserRole.Client)
+        {
+            user.ClientProfile = CreateProfile(registration.Profile!);
+        }
+
         context.Users.Add(user);
         await context.SaveChangesAsync(cancellationToken);
 
@@ -101,11 +108,50 @@ public sealed class AdminService : IAdminService
 
         await using var context = _contextFactory();
 
-        var user = await context.Users.FirstOrDefaultAsync(candidate => candidate.Id == editor.UserId, cancellationToken);
+        var user = await context.Users
+            .Include(candidate => candidate.ClientProfile)
+            .FirstOrDefaultAsync(candidate => candidate.Id == editor.UserId, cancellationToken);
 
         if (user is null)
         {
             return OperationResult.Failure(UserNotFoundMessage);
+        }
+
+        // Смена роли на «Клиент» требует анкеты: без неё учётная запись
+        // попала бы в систему, но не смогла бы обслуживаться.
+        if (editor.Role == UserRole.Client)
+        {
+            var profileValidationMessage = ValidateClientProfile(editor.Profile ?? ToProfileInput(user.ClientProfile));
+
+            if (profileValidationMessage is not null)
+            {
+                return OperationResult.Failure(profileValidationMessage);
+            }
+
+            if (user.ClientProfile is null)
+            {
+                user.ClientProfile = CreateProfile(editor.Profile!);
+            }
+            else
+            {
+                ApplyProfileChanges(user.ClientProfile, editor.Profile!);
+            }
+        }
+
+        var newLogin = editor.Login?.Trim() ?? string.Empty;
+
+        if (newLogin.Length > 0 && !string.Equals(newLogin, user.Login, StringComparison.Ordinal))
+        {
+            var isLoginTaken = await context.Users.AnyAsync(
+                candidate => candidate.Login == newLogin && candidate.Id != editor.UserId,
+                cancellationToken);
+
+            if (isLoginTaken)
+            {
+                return OperationResult.Failure(LoginAlreadyUsedMessage);
+            }
+
+            user.Login = newLogin;
         }
 
         ApplyUserChanges(user, editor);
@@ -207,6 +253,53 @@ public sealed class AdminService : IAdminService
         context.CreditProducts.FirstOrDefaultAsync(product => product.Id == productId, cancellationToken);
 
     /// <summary>
+    /// Создаёт анкету клиента по данным формы администратора.
+    /// </summary>
+    /// <param name="profile">Данные анкеты.</param>
+    /// <returns>Новая анкета клиента.</returns>
+    private static ClientProfile CreateProfile(ClientProfileInputDto profile) => new()
+    {
+        PassportNumber = profile.PassportNumber.Trim(),
+        BirthDate = profile.BirthDate,
+        RegistrationAddress = profile.RegistrationAddress.Trim(),
+        EmployerName = profile.EmployerName.Trim(),
+        EmploymentMonths = profile.EmploymentMonths,
+        MonthlyIncome = profile.MonthlyIncome,
+        MonthlyExpenses = profile.MonthlyExpenses
+    };
+
+    /// <summary>
+    /// Применяет изменения к анкете клиента.
+    /// </summary>
+    /// <param name="profile">Изменяемая анкета.</param>
+    /// <param name="input">Новые данные анкеты.</param>
+    private static void ApplyProfileChanges(ClientProfile profile, ClientProfileInputDto input)
+    {
+        profile.PassportNumber = input.PassportNumber.Trim();
+        profile.BirthDate = input.BirthDate;
+        profile.RegistrationAddress = input.RegistrationAddress.Trim();
+        profile.EmployerName = input.EmployerName.Trim();
+        profile.EmploymentMonths = input.EmploymentMonths;
+        profile.MonthlyIncome = input.MonthlyIncome;
+        profile.MonthlyExpenses = input.MonthlyExpenses;
+    }
+
+    /// <summary>
+    /// Преобразует анкету клиента в данные формы. Используется, когда администратор
+    /// меняет роль сотрудника на «Клиент», не заполняя анкету заново.
+    /// </summary>
+    /// <param name="profile">Имеющаяся анкета либо null.</param>
+    /// <returns>Данные анкеты.</returns>
+    private static ClientProfileInputDto ToProfileInput(ClientProfile? profile) => new(
+        profile?.PassportNumber ?? string.Empty,
+        profile?.BirthDate ?? default,
+        profile?.RegistrationAddress ?? string.Empty,
+        profile?.EmployerName ?? string.Empty,
+        profile?.EmploymentMonths ?? 0,
+        profile?.MonthlyIncome ?? 0m,
+        profile?.MonthlyExpenses ?? 0m);
+
+    /// <summary>
     /// Применяет изменения к учётной записи.
     /// </summary>
     /// <param name="user">Изменяемая учётная запись.</param>
@@ -241,15 +334,15 @@ public sealed class AdminService : IAdminService
     }
 
     /// <summary>
-    /// Проверяет данные регистрации сотрудника.
+    /// Проверяет данные регистрации новой учётной записи.
     /// </summary>
-    /// <param name="registration">Данные сотрудника.</param>
+    /// <param name="registration">Данные учётной записи.</param>
     /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateStaffRegistration(StaffRegistrationDto registration)
     {
         if (string.IsNullOrWhiteSpace(registration.Login))
         {
-            return "Введите логин сотрудника.";
+            return "Введите логин пользователя.";
         }
 
         if (string.IsNullOrWhiteSpace(registration.Password) || registration.Password.Length < BankConstants.PasswordMinimumLength)
@@ -259,12 +352,67 @@ public sealed class AdminService : IAdminService
 
         if (string.IsNullOrWhiteSpace(registration.FullName))
         {
-            return "Укажите фамилию, имя и отчество сотрудника.";
+            return "Укажите фамилию, имя и отчество пользователя.";
         }
 
-        return registration.Role is UserRole.CreditSpecialist or UserRole.Administrator
-            ? null
-            : "Учётные записи клиентов создаются клиентами самостоятельно при регистрации.";
+        return registration.Role == UserRole.Client
+            ? ValidateClientProfile(registration.Profile)
+            : null;
+    }
+
+    /// <summary>
+    /// Проверяет анкету клиента: без неё клиент не сможет подать заявку на кредит,
+    /// поэтому пустые или противоречивые данные не принимаются.
+    /// </summary>
+    /// <param name="profile">Данные анкеты либо null, если они не переданы.</param>
+    /// <returns>Текст ошибки или null, если данные корректны.</returns>
+    private static string? ValidateClientProfile(ClientProfileInputDto? profile)
+    {
+        if (profile is null)
+        {
+            return "Для роли «Клиент» заполните анкету.";
+        }
+
+        if (string.IsNullOrWhiteSpace(profile.PassportNumber))
+        {
+            return "Укажите номер и серию паспорта клиента.";
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - profile.BirthDate.Year;
+
+        if (age < 0)
+        {
+            age++;
+        }
+
+        if (profile.BirthDate >= today || age < BankConstants.AgeMinimumYears || age > BankConstants.AgeMaximumYears)
+        {
+            return $"Возраст клиента должен быть от {BankConstants.AgeMinimumYears} " +
+                   $"до {BankConstants.AgeMaximumYears} лет.";
+        }
+
+        if (string.IsNullOrWhiteSpace(profile.RegistrationAddress))
+        {
+            return "Укажите адрес регистрации клиента.";
+        }
+
+        if (string.IsNullOrWhiteSpace(profile.EmployerName))
+        {
+            return "Укажите место работы клиента.";
+        }
+
+        if (profile.EmploymentMonths < 0)
+        {
+            return "Стаж работы не может быть отрицательным.";
+        }
+
+        if (profile.MonthlyIncome <= 0m)
+        {
+            return "Укажите ежемесячный доход клиента.";
+        }
+
+        return profile.MonthlyExpenses >= 0m ? null : "Ежемесячные расходы не могут быть отрицательными.";
     }
 
     /// <summary>
@@ -295,7 +443,9 @@ public sealed class AdminService : IAdminService
             return $"Пароль должен содержать не менее {BankConstants.PasswordMinimumLength} символов.";
         }
 
-        return null;
+        return editor.Role == UserRole.Client
+            ? ValidateClientProfile(editor.Profile)
+            : null;
     }
 
     /// <summary>
@@ -313,6 +463,11 @@ public sealed class AdminService : IAdminService
         if (editor.AnnualInterestRate <= 0m)
         {
             return "Процентная ставка должна быть больше нуля.";
+        }
+
+        if (editor.AnnualInterestRate > BankConstants.InterestRateMaximumPercent)
+        {
+            return $"Процентная ставка не может превышать {BankConstants.InterestRateMaximumPercent:0.##}% годовых.";
         }
 
         if (editor.MinAmount <= 0m || editor.MaxAmount < editor.MinAmount)

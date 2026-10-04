@@ -24,6 +24,11 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
     private bool _isEditingExistingProduct;
 
     /// <summary>
+    /// Идентификатор редактируемого продукта. Значение 0 означает создание нового продукта.
+    /// </summary>
+    private int _editingProductId;
+
+    /// <summary>
     /// Создаёт модель представления справочника кредитных продуктов.
     /// </summary>
     /// <param name="adminService">Сервис операций администратора.</param>
@@ -66,10 +71,21 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
         get => _selectedProduct;
         set
         {
-            if (SetProperty(ref _selectedProduct, value) && value is not null)
+            if (!SetProperty(ref _selectedProduct, value))
+            {
+                return;
+            }
+
+            if (value is not null)
             {
                 FillFormFromProduct(value);
             }
+
+            // Заголовок формы зависит от выбранной строки, поэтому обновляется
+            // при каждом выборе. Раньше уведомление слалось только при смене
+            // признака режима, и при переходе с продукта № 1 на продукт № 2
+            // заголовок оставался «Редактирование продукта № 1».
+            OnPropertyChanged(nameof(FormModeText));
         }
     }
 
@@ -151,8 +167,21 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
     public bool IsEditingExistingProduct
     {
         get => _isEditingExistingProduct;
-        private set => SetProperty(ref _isEditingExistingProduct, value);
+        private set
+        {
+            if (SetProperty(ref _isEditingExistingProduct, value))
+            {
+                OnPropertyChanged(nameof(FormModeText));
+            }
+        }
     }
+
+    /// <summary>
+    /// Заголовок формы: показывает, создаётся продукт или редактируется существующий.
+    /// </summary>
+    public string FormModeText => IsEditingExistingProduct && _editingProductId > 0
+        ? $"Редактирование кредитного продукта № {_editingProductId}"
+        : "Новый кредитный продукт";
 
     /// <summary>
     /// Обновляет справочник кредитных продуктов.
@@ -163,12 +192,26 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
         {
             var products = await _adminService.GetProductsAsync(onlyActive: false);
 
+            // Режим формы запоминается до перезагрузки: таблица при заполнении
+            // может выделить строку по собственному усмотрению, и тогда форма
+            // незаметно перешла бы в режим правки, хотя пользователь ничего
+            // не выбирал, а новый продукт было бы уже не создать.
+            var wasEditing = IsEditingExistingProduct;
+            var editingId = _editingProductId;
+
             Products.Clear();
 
             foreach (var product in products)
             {
                 Products.Add(product);
             }
+
+            // После перезагрузки все элементы коллекции новые, поэтому в режиме
+            // правки выделенная строка и заполненная форма соответствуют
+            // прежнему продукту, а не устаревшему объекту из прошлой загрузки.
+            SelectedProduct = wasEditing && editingId > 0
+                ? Products.FirstOrDefault(product => product.Id == editingId)
+                : null;
 
             StatusMessage = $"Загружено продуктов: {Products.Count}.";
         });
@@ -179,8 +222,13 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
     /// </summary>
     private async Task SaveAsync()
     {
+        // Идентификатор берётся из режима формы, а не из выделения в списке:
+        // иначе сохранение после выбора строки молча изменяло бы существующий продукт.
+        var wasCreating = _editingProductId == 0;
+        var savedName = Name.Trim();
+
         var editor = new ProductEditorDto(
-            SelectedProduct?.Id ?? 0,
+            _editingProductId,
             Name.Trim(),
             AnnualInterestRate,
             MinAmount,
@@ -199,13 +247,17 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
 
         if (!result.IsSuccess)
         {
-            StatusMessage = result.ErrorMessage;
+            ShowError(result.ErrorMessage);
             return;
         }
 
-        StatusMessage = $"Продукт «{Name}» сохранён.";
+        // Форма очищается до вывода результата, иначе очистка стёрла бы сообщение.
         ClearForm();
         await ReloadAsync();
+
+        ShowSuccess(wasCreating
+            ? $"Продукт «{savedName}» создан и добавлен в справочник."
+            : $"Продукт «{savedName}» сохранён.");
     }
 
     /// <summary>
@@ -214,6 +266,7 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
     /// <param name="product">Выбранный продукт.</param>
     private void FillFormFromProduct(ProductDto product)
     {
+        _editingProductId = product.Id;
         Name = product.Name;
         AnnualInterestRate = product.AnnualInterestRate;
         MinAmount = product.MinAmount;
@@ -230,7 +283,13 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
     /// </summary>
     private void ClearForm()
     {
+        // Сначала сбрасывается режим, затем снимается выделение:
+        // при обратном порядке заголовок формы на мгновение оставался бы
+        // с номером предыдущего продукта.
+        _editingProductId = 0;
+        IsEditingExistingProduct = false;
         SelectedProduct = null;
+
         Name = string.Empty;
         AnnualInterestRate = 0m;
         MinAmount = 0m;
@@ -239,10 +298,18 @@ public sealed class ProductManagementViewModel : ViewModelBase, IPageViewModel
         MaxTermMonths = 0;
         Description = string.Empty;
         IsActive = true;
-        IsEditingExistingProduct = false;
         StatusMessage = string.Empty;
     }
 
-    /// <inheritdoc />
-    public Task LoadAsync() => ReloadAsync();
+    /// <summary>
+    /// Открывает страницу управления продуктами.
+    /// Модель представления переиспользуется всю сессию, поэтому при каждом открытии
+    /// страницы форма возвращается в режим создания: иначе она осталась бы
+    /// в режиме правки выбранного продукта и новый продукт было бы не создать.
+    /// </summary>
+    public async Task LoadAsync()
+    {
+        ClearForm();
+        await ReloadAsync();
+    }
 }

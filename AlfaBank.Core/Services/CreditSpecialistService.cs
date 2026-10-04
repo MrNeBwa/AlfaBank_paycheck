@@ -328,6 +328,9 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         context.CreditApplications
             .Include(application => application.CreditProduct)
             .Include(application => application.ClientProfile)
+                // ФИО клиента берётся из связанной учётной записи: без этой загрузки
+                // карточка заявки собирается с ошибкой NullReferenceException.
+                .ThenInclude(profile => profile.User)
             .FirstOrDefaultAsync(application => application.Id == applicationId, cancellationToken);
 
     /// <summary>
@@ -349,6 +352,7 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             CalculateAgeYears(profile),
             profile.EmploymentMonths,
             profile.MonthlyIncome,
+            profile.MonthlyExpenses,
             hasOverduePayments);
 
         return _scoringService.Evaluate(input, CalculateMonthlyPayment(application));
@@ -493,7 +497,27 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             return "Платёж по этому плану графика уже зарегистрирован.";
         }
 
-        return registration.PaidOn >= scheduleItem.Credit.IssuedOn ? null : "Дата платежа раньше даты выдачи кредита.";
+        if (registration.PaidOn < scheduleItem.Credit.IssuedOn)
+        {
+            return "Дата платежа раньше даты выдачи кредита.";
+        }
+
+        // Платёж не может быть в будущем: иначе просрочка по этому плану
+        // исчезла бы из графика раньше времени.
+        if (registration.PaidOn > DateOnly.FromDateTime(DateTime.Today))
+        {
+            return "Нельзя зарегистрировать платёж с датой из будущего.";
+        }
+
+        // Учётная модель не умеет хранить частичную оплату: план графика
+        // помечается оплаченным целиком. При сумме меньше плановой остаток
+        // долга уменьшался бы на всю сумму плана, поэтому расхождение запрещено.
+        if (decimal.Abs(registration.Amount - scheduleItem.PaymentAmount) > BankConstants.MoneyTolerance + 0.0001m)
+        {
+            return $"Сумма платежа должна точно совпадать с плановой: {scheduleItem.PaymentAmount:F2} руб.";
+        }
+
+        return null;
     }
 
     /// <summary>

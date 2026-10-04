@@ -21,6 +21,7 @@ public sealed class ShellViewModel : ViewModelBase
     private readonly NavigationService _navigationService;
 
     private NavigationItem? _selectedItem;
+    private bool _isSignedOut;
 
     /// <summary>
     /// Создаёт модель представления главного окна и строит меню согласно роли пользователя.
@@ -73,11 +74,6 @@ public sealed class ShellViewModel : ViewModelBase
             }
 
             _navigationService.Navigate(value.Page);
-
-            if (value.Page is IPageViewModel page)
-            {
-                page.LoadAsync().Forget();
-            }
         }
     }
 
@@ -149,11 +145,24 @@ public sealed class ShellViewModel : ViewModelBase
     ];
 
     /// <summary>
+    /// Признак завершения сеанса. Значение true сигнализирует главному окну о том, что его нужно закрыть.
+    /// </summary>
+    public bool IsSignedOut
+    {
+        get => _isSignedOut;
+        private set => SetProperty(ref _isSignedOut, value);
+    }
+
+    /// <summary>
     /// Завершает сеанс пользователя.
     /// </summary>
     private void LogOut()
     {
         _navigationService.Reset();
         _userSessionHolder.SignOut();
+
+        // Сигнал окну закрыться: без него главное окно оставалось открытым
+        // уже без сеанса, и цикл входа в приложение не запускал окно входа заново.
+        IsSignedOut = true;
     }
 }
