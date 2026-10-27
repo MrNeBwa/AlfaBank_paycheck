@@ -65,6 +65,20 @@ public abstract class ViewModelBase : ObservableObject
     }
 
     /// <summary>
+    /// Очищает сообщение для пользователя.
+    /// </summary>
+    /// <remarks>
+    /// Нужен страницам, где сообщение относится к конкретному действию:
+    /// при открытии или перезагрузке данных результата прошлого действия
+    /// быть не должно, иначе он «залипает» на экране.
+    /// </remarks>
+    protected void ResetStatusMessage()
+    {
+        StatusMessage = string.Empty;
+        StatusKind = StatusMessageKind.Info;
+    }
+
+    /// <summary>
     /// Формирует сообщение о непредвиденной ошибке и показывает его пользователю.
     /// </summary>
     /// <param name="exception">Исключение, возникшее при выполнении операции.</param>

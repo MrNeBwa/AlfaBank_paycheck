@@ -514,7 +514,7 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         // долга уменьшался бы на всю сумму плана, поэтому расхождение запрещено.
         if (decimal.Abs(registration.Amount - scheduleItem.PaymentAmount) > BankConstants.MoneyTolerance + 0.0001m)
         {
-            return $"Сумма платежа должна точно совпадать с плановой: {scheduleItem.PaymentAmount:F2} руб.";
+            return $"Сумма платежа должна точно совпадать с плановой: {BankTextFormatter.Rub(scheduleItem.PaymentAmount)}.";
         }
 
         return null;
