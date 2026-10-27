@@ -57,7 +57,7 @@ public sealed record ApplicationSummaryDto(
 /// <param name="StatusText">Название статуса на русском языке.</param>
 /// <param name="DecisionComment">Комментарий специалиста по решению.</param>
 /// <param name="ScorePoints">Балльная оценка заёмщика после проверки.</param>
-/// <param name="PaymentSharePercent">Доля платежа в доходе (ПДР) в процентах.</param>
+/// <param name="PaymentSharePercent">Показатель долговой нагрузки (ПДН) в процентах: платёж, делённый на свободные средства.</param>
 /// <param name="CreatedAt">Дата подачи заявки.</param>
 /// <param name="ReviewedAt">Дата рассмотрения заявки.</param>
 public sealed record ApplicationDetailsDto(
@@ -103,17 +103,22 @@ public sealed record ScoringInput(
 /// Результат автоматической оценки заёмщика.
 /// </summary>
 /// <param name="ScorePoints">Итоговый балл от нуля до ста.</param>
-/// <param name="PaymentSharePercent">Доля платежа в свободных средствах (ПДР) в процентах.</param>
+/// <param name="PaymentSharePercent">
+/// Показатель долговой нагрузки (ПДН) в процентах:
+/// платёж по кредиту, делённый на свободные средства (доход − расходы).
+/// </param>
 /// <param name="DisposableIncome">Доход за вычетом текущих расходов, то есть свободные средства.</param>
 /// <param name="MonthlyPayment">Расчётный ежемесячный платёж по кредиту.</param>
+/// <param name="IsPaymentShareAcceptable">Признак того, что ПДН не превышает предел банка.</param>
 /// <param name="IsApproved">Признак соответствия заёмщика правилам выдачи кредита.</param>
-/// <param name="Conclusion">Итоговый вывод по заёмщику на русском языке.</param>
+/// <param name="Conclusion">Итоговый вывод по заёмщику на русском языке с указанием причины отказа.</param>
 /// <param name="Reasons">Список замечаний по результатам проверки.</param>
 public sealed record ScoringResultDto(
     int ScorePoints,
     decimal PaymentSharePercent,
     decimal DisposableIncome,
     decimal MonthlyPayment,
+    bool IsPaymentShareAcceptable,
     bool IsApproved,
     string Conclusion,
     IReadOnlyList<string> Reasons);

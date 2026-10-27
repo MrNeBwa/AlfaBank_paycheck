@@ -63,7 +63,7 @@ public class CreditApplication
     public int? ScorePoints { get; set; }
 
     /// <summary>
-    /// Показатель долговой нагрузки (ПДР) в процентах. Заполняется после проверки.
+    /// Показатель долговой нагрузки (ПДН) в процентах. Заполняется после проверки.
     /// </summary>
     public decimal? PaymentSharePercent { get; set; }
 

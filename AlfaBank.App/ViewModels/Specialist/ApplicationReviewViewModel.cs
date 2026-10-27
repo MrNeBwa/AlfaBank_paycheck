@@ -23,6 +23,7 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
     private string _paymentShareText = string.Empty;
     private string _scorePointsText = string.Empty;
     private bool _isScoreApproved;
+    private bool _isPaymentShareAcceptable = true;
     private int _scorePoints;
     private decimal _paymentSharePercent;
     private decimal _disposableIncome;
@@ -153,7 +154,13 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
     }
 
     /// <summary>
-    /// Показатель долговой нагрузки в процентах.
+    /// Максимальный балл шкалы скоринга: подпись под крупным числом не должна
+    /// содержать число, расходящееся с правилами банка.
+    /// </summary>
+    public int ScoreMaximumPoints => BankConstants.ScoreMaximumPoints;
+
+    /// <summary>
+    /// Показатель долговой нагрузки (ПДН) в процентах.
     /// </summary>
     public decimal PaymentSharePercent
     {
@@ -162,54 +169,74 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         {
             if (SetProperty(ref _paymentSharePercent, value))
             {
-                OnPropertyChanged(nameof(IsPaymentShareHigh));
-                OnPropertyChanged(nameof(IsPaymentShareCritical));
+                // Производные свойства вычисляются, поэтому WPF не обновляет их
+                // сами: без явного уведомления на экране оставалось «0,0 %»
+                // и подпись «в пределах нормы» от первоначального значения.
+                NotifyPaymentShareChanged();
             }
         }
     }
 
     /// <summary>
-    /// Признак того, что долговая нагрузка близка к предельной.
+    /// Признак того, что долговая нагрузка укладывается в предел банка.
+    /// Берётся из результата скоринга: цвет подписи и решение заявки
+    /// должны зависеть от одного и того же флага.
     /// </summary>
-    public bool IsPaymentShareHigh =>
-        _paymentSharePercent > BankConstants.PaymentShareWarningPercent + 0.0001m
-        && _paymentSharePercent <= BankConstants.PaymentShareMaximumPercent + 0.0001m;
+    public bool IsPaymentShareAcceptable
+    {
+        get => _isPaymentShareAcceptable;
+        private set
+        {
+            if (SetProperty(ref _isPaymentShareAcceptable, value))
+            {
+                NotifyPaymentShareChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Признак того, что долговая нагрузка превышает предельную.
     /// </summary>
-    public bool IsPaymentShareCritical =>
-        _paymentSharePercent > BankConstants.PaymentShareMaximumPercent + 0.0001m;
+    public bool IsPaymentShareCritical => !_isPaymentShareAcceptable;
+
+    /// <summary>
+    /// Признак того, что долговая нагрузка близка к предельной.
+    /// </summary>
+    public bool IsPaymentShareHigh =>
+        _isPaymentShareAcceptable
+        && _paymentSharePercent > BankConstants.PaymentShareWarningPercent + BankConstants.PaymentShareTolerance;
 
     /// <summary>
     /// Признак того, что долговая нагрузка в пределах нормы.
     /// </summary>
-    public bool IsPaymentShareNormal =>
-        _paymentSharePercent <= BankConstants.PaymentShareWarningPercent + 0.0001m;
+    public bool IsPaymentShareNormal => _isPaymentShareAcceptable && !IsPaymentShareHigh;
 
     /// <summary>
     /// Показатель долговой нагрузки в виде процента для крупной подписи.
     /// </summary>
-    public string PaymentSharePercentText => $"{_paymentSharePercent:F1}%";
+    public string PaymentSharePercentText => BankTextFormatter.Percent(_paymentSharePercent);
 
     /// <summary>
     /// Короткая подпись к показателю долговой нагрузки: зелёная, жёлтая или красная.
+    /// Текст зависит от того же флага, что и решение по заявке.
     /// </summary>
     public string PaymentShareSummaryText
     {
         get
         {
+            var limit = BankTextFormatter.Percent(BankConstants.PaymentShareMaximumPercent, digits: 0);
+
             if (IsPaymentShareCritical)
             {
-                return $"выше предельных {BankConstants.PaymentShareMaximumPercent:F0}% — заявка будет отклонена";
+                return $"выше нормы (предел {limit}) — заявка будет отклонена";
             }
 
             if (IsPaymentShareHigh)
             {
-                return "нагрузка близка к предельной, требуется внимание специалиста";
+                return $"в пределах нормы, но близко к пределу ({limit}) — требуется внимание специалиста";
             }
 
-            return $"в пределах нормы (не более {BankConstants.PaymentShareMaximumPercent:F0}%)";
+            return $"в пределах нормы (не более {limit})";
         }
     }
 
@@ -241,6 +268,12 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
     /// </summary>
     public async Task ReloadAsync()
     {
+        // Сообщение внизу страницы относится только к действию специалиста
+        // («Одобрение невозможно…» появляется после нажатия «Одобрить»).
+        // При открытии заявки оно должно быть пустым, иначе результат
+        // предыдущего решения остаётся на экране красной строкой.
+        ResetStatusMessage();
+
         await ExecuteGuardedAsync(async () =>
         {
             var detailsResult = await _specialistService.GetApplicationDetailsAsync(_applicationId);
@@ -315,7 +348,8 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
     }
 
     /// <summary>
-    /// Отображает результаты скоринга.
+    /// Сбрасывает результаты проверки: после решения заявка уходит из очереди,
+    /// и на странице не должны оставаться цифры прошлой проверки.
     /// </summary>
     private void ClearScoringState()
     {
@@ -329,26 +363,36 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         PaymentShareText = string.Empty;
         ScoreConclusion = string.Empty;
         IsScoreApproved = false;
+        IsPaymentShareAcceptable = true;
         Reasons.Clear();
         OnPropertyChanged(nameof(CanDecide));
         ApproveCommand.RaiseCanExecuteChanged();
         RejectCommand.RaiseCanExecuteChanged();
     }
 
+    /// <summary>
+    /// Отображает результаты скоринга.
+    /// </summary>
+    /// <param name="scoring">Результат оценки заёмщика.</param>
     private void ApplyScoring(ScoringResultDto scoring)
     {
         ScorePoints = scoring.ScorePoints;
         PaymentSharePercent = scoring.PaymentSharePercent;
         DisposableIncome = scoring.DisposableIncome;
         MonthlyPayment = scoring.MonthlyPayment;
+        IsPaymentShareAcceptable = scoring.IsPaymentShareAcceptable;
         ScorePointsText =
-            $"Балльная оценка: {scoring.ScorePoints} из 100 " +
+            $"Балльная оценка: {scoring.ScorePoints} из {BankConstants.ScoreMaximumPoints} " +
             $"(для одобрения нужно не менее {BankConstants.ScoreMinimumToApprove}).";
+
+        // Формула ПДН показана явно: платёж делится на свободные средства,
+        // то есть на те же суммы, что используются в замечаниях скоринга.
         PaymentShareText =
-            $"Платёж по кредиту {scoring.MonthlyPayment:F2} руб. — это " +
-            $"{scoring.PaymentSharePercent:F1}% свободных средств заёмщика " +
-            $"({scoring.DisposableIncome:F2} руб. в месяц после расходов). " +
-            $"Предельная доля — {BankConstants.PaymentShareMaximumPercent:F0}%.";
+            $"ПДН = платёж / свободные средства (доход − расходы): " +
+            $"{BankTextFormatter.Rub(scoring.MonthlyPayment)} / " +
+            $"{BankTextFormatter.Rub(scoring.DisposableIncome)} = " +
+            $"{BankTextFormatter.Percent(scoring.PaymentSharePercent)} " +
+            $"при пределе {BankTextFormatter.Percent(BankConstants.PaymentShareMaximumPercent, digits: 0)}.";
         ScoreConclusion = scoring.Conclusion;
         IsScoreApproved = scoring.IsApproved;
 
@@ -358,6 +402,19 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         {
             Reasons.Add(reason);
         }
+    }
+
+    /// <summary>
+    /// Оповещает интерфейс об изменении показателя долговой нагрузки и всех
+    /// производных от него подписей и цветовых меток.
+    /// </summary>
+    private void NotifyPaymentShareChanged()
+    {
+        OnPropertyChanged(nameof(IsPaymentShareCritical));
+        OnPropertyChanged(nameof(IsPaymentShareHigh));
+        OnPropertyChanged(nameof(IsPaymentShareNormal));
+        OnPropertyChanged(nameof(PaymentSharePercentText));
+        OnPropertyChanged(nameof(PaymentShareSummaryText));
     }
 
     /// <summary>
