@@ -9,9 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlfaBank.Core.Services;
 
-/// <summary>
-/// Сервис авторизации: регистрация клиентов, проверка паролей и вход в систему.
-/// </summary>
 public sealed class AuthService : IAuthService
 {
     private const string LoginAlreadyUsedMessage = "Пользователь с таким логином уже зарегистрирован.";
@@ -21,18 +18,12 @@ public sealed class AuthService : IAuthService
     private readonly Func<AppDbContext> _contextFactory;
     private readonly IPasswordHasher _passwordHasher;
 
-    /// <summary>
-    /// Создаёт сервис авторизации.
-    /// </summary>
-    /// <param name="contextFactory">Фабрика контекстов базы данных.</param>
-    /// <param name="passwordHasher">Сервис хэширования паролей.</param>
     public AuthService(Func<AppDbContext> contextFactory, IPasswordHasher passwordHasher)
     {
         _contextFactory = contextFactory;
         _passwordHasher = passwordHasher;
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<UserSessionDto>> LoginAsync(
         LoginRequest request,
         CancellationToken cancellationToken = default)
@@ -51,7 +42,6 @@ public sealed class AuthService : IAuthService
         return BuildLoginResult(user, request.Password);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<UserSessionDto>> RegisterClientAsync(
         RegistrationRequest request,
         CancellationToken cancellationToken = default)
@@ -92,12 +82,6 @@ public sealed class AuthService : IAuthService
         return OperationResult<UserSessionDto>.Success(CreateSession(user));
     }
 
-    /// <summary>
-    /// Формирует результат входа по найденной учётной записи.
-    /// </summary>
-    /// <param name="user">Найденный пользователь или null.</param>
-    /// <param name="password">Проверяемый пароль.</param>
-    /// <returns>Данные сеанса либо текст ошибки.</returns>
     private OperationResult<UserSessionDto> BuildLoginResult(User? user, string password)
     {
         if (user is null || !_passwordHasher.Verify(password, user.PasswordHash))
@@ -113,11 +97,6 @@ public sealed class AuthService : IAuthService
         return OperationResult<UserSessionDto>.Success(CreateSession(user));
     }
 
-    /// <summary>
-    /// Создаёт анкету клиента по данным регистрации.
-    /// </summary>
-    /// <param name="request">Данные регистрации клиента.</param>
-    /// <returns>Новая анкета клиента.</returns>
     private static ClientProfile CreateProfile(RegistrationRequest request) => new()
     {
         PassportNumber = request.PassportNumber,
@@ -129,11 +108,6 @@ public sealed class AuthService : IAuthService
         MonthlyExpenses = request.MonthlyExpenses
     };
 
-    /// <summary>
-    /// Формирует данные сеанса пользователя.
-    /// </summary>
-    /// <param name="user">Пользователь с загруженной анкетой.</param>
-    /// <returns>Данные текущего пользователя.</returns>
     private static UserSessionDto CreateSession(User user) => new(
         user.Id,
         user.Login,
@@ -142,23 +116,11 @@ public sealed class AuthService : IAuthService
         StatusTextProvider.GetRoleText(user.Role),
         user.ClientProfile?.Id);
 
-    /// <summary>
-    /// Ищет пользователя вместе с его анкетой по логину.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="login">Логин пользователя.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Найденный пользователь или null.</returns>
     private static Task<User?> GetUserByLoginAsync(AppDbContext context, string login, CancellationToken cancellationToken) =>
         context.Users
             .Include(user => user.ClientProfile)
             .FirstOrDefaultAsync(user => user.Login == login, cancellationToken);
 
-    /// <summary>
-    /// Проверяет данные для входа в систему.
-    /// </summary>
-    /// <param name="request">Данные для входа.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateLoginRequest(LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Login))
@@ -169,11 +131,6 @@ public sealed class AuthService : IAuthService
         return string.IsNullOrWhiteSpace(request.Password) ? "Введите пароль." : null;
     }
 
-    /// <summary>
-    /// Проверяет данные самостоятельной регистрации клиента.
-    /// </summary>
-    /// <param name="request">Данные регистрации.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateRegistrationRequest(RegistrationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Login))

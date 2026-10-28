@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!--
-    AlfaBank.App — приложение Windows Presentation Foundation:
-    слой представления (MVVM) поверх библиотеки AlfaBank.Core.
-  -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>

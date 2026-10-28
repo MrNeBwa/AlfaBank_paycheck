@@ -7,9 +7,6 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Specialist;
 
-/// <summary>
-/// Проверка заявки кредитным специалистом: данные клиента, скоринг и решение.
-/// </summary>
 public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
 {
     private readonly ICreditSpecialistService _specialistService;
@@ -29,13 +26,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
     private decimal _disposableIncome;
     private decimal _monthlyPayment;
 
-    /// <summary>
-    /// Создаёт модель представления проверки заявки.
-    /// </summary>
-    /// <param name="specialistService">Сервис операций кредитного специалиста.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
-    /// <param name="queuePage">Страница очереди, обновляемая после решения.</param>
-    /// <param name="applicationId">Идентификатор проверяемой заявки.</param>
     public ApplicationReviewViewModel(
         ICreditSpecialistService specialistService,
         UserSessionHolder userSessionHolder,
@@ -54,29 +44,14 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         RejectCommand = new AsyncRelayCommand(RejectAsync, onError: ReportUnexpectedError);
     }
 
-    /// <summary>
-    /// Замечания по результатам скоринга.
-    /// </summary>
     public ObservableCollection<string> Reasons { get; }
 
-    /// <summary>
-    /// Команда загрузки данных заявки и расчёта скоринга.
-    /// </summary>
     public AsyncRelayCommand ReloadCommand { get; }
 
-    /// <summary>
-    /// Команда одобрения заявки с формированием графика платежей.
-    /// </summary>
     public AsyncRelayCommand ApproveCommand { get; }
 
-    /// <summary>
-    /// Команда отклонения заявки.
-    /// </summary>
     public AsyncRelayCommand RejectCommand { get; }
 
-    /// <summary>
-    /// Проверяемая заявка.
-    /// </summary>
     public ApplicationDetailsDto? Application
     {
         get => _application;
@@ -91,9 +66,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Комментарий специалиста по решению.
-    /// </summary>
     public string DecisionComment
     {
         get => _decisionComment;
@@ -107,61 +79,38 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Балльная оценка заёмщика в текстовом виде.
-    /// </summary>
     public string ScorePointsText
     {
         get => _scorePointsText;
         private set => SetProperty(ref _scorePointsText, value);
     }
 
-    /// <summary>
-    /// Показатель долговой нагрузки в текстовом виде.
-    /// </summary>
     public string PaymentShareText
     {
         get => _paymentShareText;
         private set => SetProperty(ref _paymentShareText, value);
     }
 
-    /// <summary>
-    /// Вывод автоматической проверки заёмщика.
-    /// </summary>
     public string ScoreConclusion
     {
         get => _scoreConclusion;
         private set => SetProperty(ref _scoreConclusion, value);
     }
 
-    /// <summary>
-    /// Признак того, что заёмщик прошёл автоматическую проверку.
-    /// Определяет цвет блока с результатами скоринга: зелёный при успехе, красный при отказе.
-    /// </summary>
     public bool IsScoreApproved
     {
         get => _isScoreApproved;
         private set => SetProperty(ref _isScoreApproved, value);
     }
 
-    /// <summary>
-    /// Балльная оценка заёмщика числом: показывается крупно, как в личном кабинете банка.
-    /// </summary>
     public int ScorePoints
     {
         get => _scorePoints;
         private set => SetProperty(ref _scorePoints, value);
     }
 
-    /// <summary>
-    /// Максимальный балл шкалы скоринга: подпись под крупным числом не должна
-    /// содержать число, расходящееся с правилами банка.
-    /// </summary>
     public int ScoreMaximumPoints => BankConstants.ScoreMaximumPoints;
 
-    /// <summary>
-    /// Показатель долговой нагрузки (ПДН) в процентах.
-    /// </summary>
     public decimal PaymentSharePercent
     {
         get => _paymentSharePercent;
@@ -169,19 +118,11 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         {
             if (SetProperty(ref _paymentSharePercent, value))
             {
-                // Производные свойства вычисляются, поэтому WPF не обновляет их
-                // сами: без явного уведомления на экране оставалось «0,0 %»
-                // и подпись «в пределах нормы» от первоначального значения.
                 NotifyPaymentShareChanged();
             }
         }
     }
 
-    /// <summary>
-    /// Признак того, что долговая нагрузка укладывается в предел банка.
-    /// Берётся из результата скоринга: цвет подписи и решение заявки
-    /// должны зависеть от одного и того же флага.
-    /// </summary>
     public bool IsPaymentShareAcceptable
     {
         get => _isPaymentShareAcceptable;
@@ -194,32 +135,16 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Признак того, что долговая нагрузка превышает предельную.
-    /// </summary>
     public bool IsPaymentShareCritical => !_isPaymentShareAcceptable;
 
-    /// <summary>
-    /// Признак того, что долговая нагрузка близка к предельной.
-    /// </summary>
     public bool IsPaymentShareHigh =>
         _isPaymentShareAcceptable
         && _paymentSharePercent > BankConstants.PaymentShareWarningPercent + BankConstants.PaymentShareTolerance;
 
-    /// <summary>
-    /// Признак того, что долговая нагрузка в пределах нормы.
-    /// </summary>
     public bool IsPaymentShareNormal => _isPaymentShareAcceptable && !IsPaymentShareHigh;
 
-    /// <summary>
-    /// Показатель долговой нагрузки в виде процента для крупной подписи.
-    /// </summary>
     public string PaymentSharePercentText => BankTextFormatter.Percent(_paymentSharePercent);
 
-    /// <summary>
-    /// Короткая подпись к показателю долговой нагрузки: зелёная, жёлтая или красная.
-    /// Текст зависит от того же флага, что и решение по заявке.
-    /// </summary>
     public string PaymentShareSummaryText
     {
         get
@@ -240,38 +165,22 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Свободные средства заёмщика после вычета расходов.
-    /// </summary>
     public decimal DisposableIncome
     {
         get => _disposableIncome;
         private set => SetProperty(ref _disposableIncome, value);
     }
 
-    /// <summary>
-    /// Расчётный ежемесячный платёж по кредиту.
-    /// </summary>
     public decimal MonthlyPayment
     {
         get => _monthlyPayment;
         private set => SetProperty(ref _monthlyPayment, value);
     }
 
-    /// <summary>
-    /// Признак доступности решения по заявке.
-    /// </summary>
     public bool CanDecide => Application?.Status == CreditApplicationStatus.New;
 
-    /// <summary>
-    /// Загружает данные заявки и выполняет скоринг заёмщика.
-    /// </summary>
     public async Task ReloadAsync()
     {
-        // Сообщение внизу страницы относится только к действию специалиста
-        // («Одобрение невозможно…» появляется после нажатия «Одобрить»).
-        // При открытии заявки оно должно быть пустым, иначе результат
-        // предыдущего решения остаётся на экране красной строкой.
         ResetStatusMessage();
 
         await ExecuteGuardedAsync(async () =>
@@ -299,9 +208,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Одобряет заявку: система формирует кредит и аннуитетный график платежей.
-    /// </summary>
     private async Task ApproveAsync()
     {
         var result = await ExecuteGuardedAsync(() =>
@@ -323,9 +229,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         ClearScoringState();
     }
 
-    /// <summary>
-    /// Отклоняет заявку с обязательным комментарием специалиста.
-    /// </summary>
     private async Task RejectAsync()
     {
         var result = await ExecuteGuardedAsync(() =>
@@ -347,10 +250,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         ClearScoringState();
     }
 
-    /// <summary>
-    /// Сбрасывает результаты проверки: после решения заявка уходит из очереди,
-    /// и на странице не должны оставаться цифры прошлой проверки.
-    /// </summary>
     private void ClearScoringState()
     {
         Application = null;
@@ -370,10 +269,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         RejectCommand.RaiseCanExecuteChanged();
     }
 
-    /// <summary>
-    /// Отображает результаты скоринга.
-    /// </summary>
-    /// <param name="scoring">Результат оценки заёмщика.</param>
     private void ApplyScoring(ScoringResultDto scoring)
     {
         ScorePoints = scoring.ScorePoints;
@@ -385,8 +280,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
             $"Балльная оценка: {scoring.ScorePoints} из {BankConstants.ScoreMaximumPoints} " +
             $"(для одобрения нужно не менее {BankConstants.ScoreMinimumToApprove}).";
 
-        // Формула ПДН показана явно: платёж делится на свободные средства,
-        // то есть на те же суммы, что используются в замечаниях скоринга.
         PaymentShareText =
             $"ПДН = платёж / свободные средства (доход − расходы): " +
             $"{BankTextFormatter.Rub(scoring.MonthlyPayment)} / " +
@@ -404,10 +297,6 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Оповещает интерфейс об изменении показателя долговой нагрузки и всех
-    /// производных от него подписей и цветовых меток.
-    /// </summary>
     private void NotifyPaymentShareChanged()
     {
         OnPropertyChanged(nameof(IsPaymentShareCritical));
@@ -417,11 +306,7 @@ public sealed class ApplicationReviewViewModel : ViewModelBase, IPageViewModel
         OnPropertyChanged(nameof(PaymentShareSummaryText));
     }
 
-    /// <summary>
-    /// Идентификатор кредитного специалиста, работающего с заявкой.
-    /// </summary>
     private int CurrentSpecialistId => _userSessionHolder.CurrentUser?.UserId ?? 0;
 
-    /// <inheritdoc />
     public Task LoadAsync() => ReloadAsync();
 }

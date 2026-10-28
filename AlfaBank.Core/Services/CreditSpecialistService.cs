@@ -8,9 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlfaBank.Core.Services;
 
-/// <summary>
-/// Сервис кредитного специалиста: проверка заявок, скоринг, формирование кредита и учёт платежей.
-/// </summary>
 public sealed class CreditSpecialistService : ICreditSpecialistService
 {
     private const string ApplicationNotFoundMessage = "Заявка не найдена.";
@@ -22,12 +19,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
     private readonly ICreditCalculator _creditCalculator;
     private readonly IScoringService _scoringService;
 
-    /// <summary>
-    /// Создаёт сервис кредитного специалиста.
-    /// </summary>
-    /// <param name="contextFactory">Фабрика контекстов базы данных.</param>
-    /// <param name="creditCalculator">Кредитный калькулятор.</param>
-    /// <param name="scoringService">Сервис скоринга заёмщика.</param>
     public CreditSpecialistService(
         Func<AppDbContext> contextFactory,
         ICreditCalculator creditCalculator,
@@ -38,7 +29,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         _scoringService = scoringService;
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<ApplicationSummaryDto>> GetQueueAsync(
         CreditApplicationStatus? statusFilter,
         CancellationToken cancellationToken = default)
@@ -64,7 +54,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             .ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<ApplicationDetailsDto>> GetApplicationDetailsAsync(
         int applicationId,
         CancellationToken cancellationToken = default)
@@ -86,7 +75,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult<ApplicationDetailsDto>.Success(details);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<ScoringResultDto>> EvaluateApplicationAsync(
         int applicationId,
         CancellationToken cancellationToken = default)
@@ -105,7 +93,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult<ScoringResultDto>.Success(scoring);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<int>> ApproveApplicationAsync(
         int applicationId,
         int specialistUserId,
@@ -157,7 +144,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult<int>.Success(credit.Id);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult> RejectApplicationAsync(
         int applicationId,
         int specialistUserId,
@@ -202,7 +188,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult.Success();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<CreditSummaryDto>> GetCreditsAsync(
         string searchText,
         CancellationToken cancellationToken = default)
@@ -236,7 +221,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             .ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<IReadOnlyList<ScheduleRowDto>>> GetScheduleAsync(
         int creditId,
         CancellationToken cancellationToken = default)
@@ -259,7 +243,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult<IReadOnlyList<ScheduleRowDto>>.Success(rows);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult> RegisterPaymentAsync(
         PaymentRegistrationDto registration,
         int specialistUserId,
@@ -296,7 +279,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return OperationResult.Success();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<PaymentDto>> GetPaymentsAsync(
         int creditId,
         CancellationToken cancellationToken = default)
@@ -314,13 +296,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             .ToList();
     }
 
-    /// <summary>
-    /// Загружает заявку вместе с анкетой клиента и кредитным продуктом.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="applicationId">Идентификатор заявки.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Заявка либо null, если заявка не найдена.</returns>
     private static Task<CreditApplication?> GetApplicationAsync(
         AppDbContext context,
         int applicationId,
@@ -328,18 +303,10 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         context.CreditApplications
             .Include(application => application.CreditProduct)
             .Include(application => application.ClientProfile)
-                // ФИО клиента берётся из связанной учётной записи: без этой загрузки
-                // карточка заявки собирается с ошибкой NullReferenceException.
+                // ФИО клиента лежит в связанной учётной записи: без User маппинг заявки падает
                 .ThenInclude(profile => profile.User)
             .FirstOrDefaultAsync(application => application.Id == applicationId, cancellationToken);
 
-    /// <summary>
-    /// Выполняет скоринг заёмщика по заявке.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="application">Проверяемая заявка.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Результат оценки заёмщика.</returns>
     private async Task<ScoringResultDto> EvaluateAsync(
         AppDbContext context,
         CreditApplication application,
@@ -358,13 +325,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return _scoringService.Evaluate(input, CalculateMonthlyPayment(application));
     }
 
-    /// <summary>
-    /// Определяет наличие просроченных платежей по действующим кредитам клиента.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="clientProfileId">Идентификатор анкеты клиента.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Значение, если просроченные платежи есть.</returns>
     private static Task<bool> HasOverduePaymentsAsync(
         AppDbContext context,
         int clientProfileId,
@@ -380,13 +340,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             cancellationToken);
     }
 
-    /// <summary>
-    /// Создаёт кредит по одобренной заявке.
-    /// </summary>
-    /// <param name="application">Одобренная заявка.</param>
-    /// <param name="annualInterestRate">Зафиксированная ставка по продукту.</param>
-    /// <param name="issuedOn">Дата выдачи кредита.</param>
-    /// <returns>Новый кредит.</returns>
     private static Credit CreateCredit(CreditApplication application, decimal annualInterestRate, DateOnly issuedOn) => new()
     {
         CreditApplicationId = application.Id,
@@ -397,14 +350,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         Status = CreditStatus.Active
     };
 
-    /// <summary>
-    /// Формирует график платежей по вновь открытому кредиту.
-    /// </summary>
-    /// <param name="credit">Кредит, для которого строится график.</param>
-    /// <param name="application">Заявка, по которой открыт кредит.</param>
-    /// <param name="annualInterestRate">Зафиксированная ставка по продукту.</param>
-    /// <param name="issuedOn">Дата выдачи кредита.</param>
-    /// <returns>Коллекция плановых платежей.</returns>
     private List<CreditScheduleItem> CreateScheduleItems(
         Credit credit,
         CreditApplication application,
@@ -434,13 +379,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             .ToList();
     }
 
-    /// <summary>
-    /// Фиксирует решение специалиста по заявке.
-    /// </summary>
-    /// <param name="application">Обрабатываемая заявка.</param>
-    /// <param name="specialistUserId">Идентификатор специалиста.</param>
-    /// <param name="comment">Комментарий по решению.</param>
-    /// <param name="scoring">Результат скоринга.</param>
     private static void ApplyApproval(
         CreditApplication application,
         int specialistUserId,
@@ -455,15 +393,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         application.DecisionComment = string.IsNullOrWhiteSpace(comment) ? scoring.Conclusion : comment;
     }
 
-    /// <summary>
-    /// Создаёт запись об изменении статуса заявки.
-    /// </summary>
-    /// <param name="application">Заявка.</param>
-    /// <param name="fromStatus">Статус заявки до решения.</param>
-    /// <param name="toStatus">Статус заявки после решения.</param>
-    /// <param name="changedByUserId">Идентификатор специалиста.</param>
-    /// <param name="comment">Комментарий к решению.</param>
-    /// <returns>Новая запись истории.</returns>
     private static ApplicationStatusHistory CreateHistoryRecord(
         CreditApplication application,
         CreditApplicationStatus fromStatus,
@@ -479,12 +408,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             Comment = comment
         };
 
-    /// <summary>
-    /// Проверяет корректность регистрируемого платежа.
-    /// </summary>
-    /// <param name="scheduleItem">Оплачиваемый план графика.</param>
-    /// <param name="registration">Данные платежа.</param>
-    /// <returns>Текст ошибки или null, если платёж можно зарегистрировать.</returns>
     private static string? ValidatePayment(CreditScheduleItem scheduleItem, PaymentRegistrationDto registration)
     {
         if (registration.Amount <= 0m)
@@ -502,16 +425,11 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             return "Дата платежа раньше даты выдачи кредита.";
         }
 
-        // Платёж не может быть в будущем: иначе просрочка по этому плану
-        // исчезла бы из графика раньше времени.
         if (registration.PaidOn > DateOnly.FromDateTime(DateTime.Today))
         {
             return "Нельзя зарегистрировать платёж с датой из будущего.";
         }
 
-        // Учётная модель не умеет хранить частичную оплату: план графика
-        // помечается оплаченным целиком. При сумме меньше плановой остаток
-        // долга уменьшался бы на всю сумму плана, поэтому расхождение запрещено.
         if (decimal.Abs(registration.Amount - scheduleItem.PaymentAmount) > BankConstants.MoneyTolerance + 0.0001m)
         {
             return $"Сумма платежа должна точно совпадать с плановой: {BankTextFormatter.Rub(scheduleItem.PaymentAmount)}.";
@@ -520,13 +438,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         return null;
     }
 
-    /// <summary>
-    /// Создаёт зарегистрированный платёж по графику.
-    /// </summary>
-    /// <param name="scheduleItem">Оплачиваемый план графика.</param>
-    /// <param name="registration">Данные платежа.</param>
-    /// <param name="specialistUserId">Идентификатор специалиста.</param>
-    /// <returns>Новый платёж.</returns>
     private static Payment CreatePayment(
         CreditScheduleItem scheduleItem,
         PaymentRegistrationDto registration,
@@ -542,14 +453,6 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
             RegisteredByUserId = specialistUserId
         };
 
-    /// <summary>
-    /// Закрывает кредит, если оплачены все планы графика.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="credit">Кредит, по которому зарегистрирован платёж.</param>
-    /// <param name="paidScheduleItemId">Идентификатор только что оплаченного плана.</param>
-    /// <param name="paidOn">Дата платежа.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
     private static async Task CloseCreditIfFullyPaidAsync(
         AppDbContext context,
         Credit credit,
@@ -570,22 +473,12 @@ public sealed class CreditSpecialistService : ICreditSpecialistService
         }
     }
 
-    /// <summary>
-    /// Рассчитывает ежемесячный платёж по заявке.
-    /// </summary>
-    /// <param name="application">Заявка с загруженным продуктом.</param>
-    /// <returns>Сумма ежемесячного платежа.</returns>
     private decimal CalculateMonthlyPayment(CreditApplication application) =>
         _creditCalculator.CalculateMonthlyPayment(
             application.Amount,
             application.CreditProduct.AnnualInterestRate,
             application.TermMonths);
 
-    /// <summary>
-    /// Рассчитывает возраст клиента в полных годах.
-    /// </summary>
-    /// <param name="profile">Анкета клиента.</param>
-    /// <returns>Количество полных лет.</returns>
     private static int CalculateAgeYears(ClientProfile profile)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);

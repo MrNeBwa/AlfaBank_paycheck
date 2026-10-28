@@ -8,9 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlfaBank.Core.Services;
 
-/// <summary>
-/// Сервис операций клиента.
-/// </summary>
 public sealed class ClientService : IClientService
 {
     private const string ProfileNotFoundMessage = "Анкета клиента не найдена. Обратитесь к администратору.";
@@ -19,18 +16,12 @@ public sealed class ClientService : IClientService
     private readonly Func<AppDbContext> _contextFactory;
     private readonly ICreditCalculator _creditCalculator;
 
-    /// <summary>
-    /// Создаёт сервис операций клиента.
-    /// </summary>
-    /// <param name="contextFactory">Фабрика контекстов базы данных.</param>
-    /// <param name="creditCalculator">Кредитный калькулятор.</param>
     public ClientService(Func<AppDbContext> contextFactory, ICreditCalculator creditCalculator)
     {
         _contextFactory = contextFactory;
         _creditCalculator = creditCalculator;
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<ProductDto>> GetAvailableProductsAsync(CancellationToken cancellationToken = default)
     {
         await using var context = _contextFactory();
@@ -43,7 +34,6 @@ public sealed class ClientService : IClientService
         return products.Select(EntityMapper.ToProductDto).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult> SubmitApplicationAsync(
         int clientProfileId,
         ApplicationSubmissionDto submission,
@@ -93,7 +83,6 @@ public sealed class ClientService : IClientService
         return OperationResult.Success();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<ApplicationSummaryDto>> GetMyApplicationsAsync(
         int clientProfileId,
         CancellationToken cancellationToken = default)
@@ -118,7 +107,6 @@ public sealed class ClientService : IClientService
             .ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<ClientOverviewDto>> GetOverviewAsync(
         int clientProfileId,
         CancellationToken cancellationToken = default)
@@ -151,7 +139,6 @@ public sealed class ClientService : IClientService
         return OperationResult<ClientOverviewDto>.Success(overview);
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<CreditSummaryDto>> GetMyCreditsAsync(
         int clientProfileId,
         CancellationToken cancellationToken = default)
@@ -169,7 +156,6 @@ public sealed class ClientService : IClientService
             .ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<IReadOnlyList<ScheduleRowDto>>> GetMyScheduleAsync(
         int clientProfileId,
         int creditId,
@@ -198,7 +184,6 @@ public sealed class ClientService : IClientService
         return OperationResult<IReadOnlyList<ScheduleRowDto>>.Success(rows);
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<PaymentDto>> GetMyPaymentsAsync(
         int clientProfileId,
         CancellationToken cancellationToken = default)
@@ -216,13 +201,6 @@ public sealed class ClientService : IClientService
             .ToList();
     }
 
-    /// <summary>
-    /// Загружает кредиты клиента вместе с графиками платежей.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="clientProfileId">Идентификатор анкеты клиента.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Коллекция кредитов клиента.</returns>
     private static Task<List<Credit>> LoadCreditsAsync(
         AppDbContext context,
         int clientProfileId,
@@ -237,12 +215,6 @@ public sealed class ClientService : IClientService
             .Where(credit => credit.CreditApplication.ClientProfileId == clientProfileId)
             .ToListAsync(cancellationToken);
 
-    /// <summary>
-    /// Проверяет соответствие заявки лимитам кредитного продукта.
-    /// </summary>
-    /// <param name="product">Кредитный продукт.</param>
-    /// <param name="submission">Данные заявки.</param>
-    /// <returns>Текст ошибки или null, если заявка соответствует лимитам.</returns>
     private static string? ValidateSubmissionLimits(CreditProduct product, ApplicationSubmissionDto submission)
     {
         if (!product.IsActive)
@@ -263,11 +235,6 @@ public sealed class ClientService : IClientService
         return null;
     }
 
-    /// <summary>
-    /// Суммирует остаток задолженности по всем кредитам клиента.
-    /// </summary>
-    /// <param name="credits">Кредиты клиента.</param>
-    /// <returns>Остаток задолженности в рублях.</returns>
     private static decimal SumUnpaidPayments(IEnumerable<Credit> credits)
     {
         var total = credits
@@ -278,11 +245,6 @@ public sealed class ClientService : IClientService
         return decimal.Round(total, BankConstants.MoneyScaleDigits, MidpointRounding.AwayFromZero);
     }
 
-    /// <summary>
-    /// Суммирует оплаченные платежи по кредиту.
-    /// </summary>
-    /// <param name="credit">Кредит с графиком платежей.</param>
-    /// <returns>Сумма оплаченных платежей.</returns>
     private static decimal SumPaidPayments(Credit credit)
     {
         var total = credit.ScheduleItems

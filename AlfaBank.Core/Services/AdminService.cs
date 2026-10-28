@@ -9,9 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlfaBank.Core.Services;
 
-/// <summary>
-/// Сервис администратора: управление учётными записями и справочником кредитных продуктов.
-/// </summary>
 public sealed class AdminService : IAdminService
 {
     private const string LoginAlreadyUsedMessage = "Пользователь с таким логином уже зарегистрирован.";
@@ -23,18 +20,12 @@ public sealed class AdminService : IAdminService
     private readonly Func<AppDbContext> _contextFactory;
     private readonly IPasswordHasher _passwordHasher;
 
-    /// <summary>
-    /// Создаёт сервис администратора.
-    /// </summary>
-    /// <param name="contextFactory">Фабрика контекстов базы данных.</param>
-    /// <param name="passwordHasher">Сервис хэширования паролей.</param>
     public AdminService(Func<AppDbContext> contextFactory, IPasswordHasher passwordHasher)
     {
         _contextFactory = contextFactory;
         _passwordHasher = passwordHasher;
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken cancellationToken = default)
     {
         await using var context = _contextFactory();
@@ -47,7 +38,6 @@ public sealed class AdminService : IAdminService
         return users.Select(EntityMapper.ToUserDto).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<int>> RegisterStaffAsync(
         StaffRegistrationDto registration,
         CancellationToken cancellationToken = default)
@@ -80,8 +70,6 @@ public sealed class AdminService : IAdminService
             CreatedAt = DateTime.Now
         };
 
-        // Клиенту анкета нужна сразу: без неё он не сможет подать заявку на кредит,
-        // а заполнить её самостоятельно не может — отдельной страницы правки анкеты нет.
         if (registration.Role == UserRole.Client)
         {
             user.ClientProfile = CreateProfile(registration.Profile!);
@@ -93,7 +81,6 @@ public sealed class AdminService : IAdminService
         return OperationResult<int>.Success(user.Id);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult> UpdateUserAsync(
         UserEditorDto editor,
         int administratorUserId,
@@ -117,8 +104,6 @@ public sealed class AdminService : IAdminService
             return OperationResult.Failure(UserNotFoundMessage);
         }
 
-        // Смена роли на «Клиент» требует анкеты: без неё учётная запись
-        // попала бы в систему, но не смогла бы обслуживаться.
         if (editor.Role == UserRole.Client)
         {
             var profileValidationMessage = ValidateClientProfile(editor.Profile ?? ToProfileInput(user.ClientProfile));
@@ -161,7 +146,6 @@ public sealed class AdminService : IAdminService
         return OperationResult.Success();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<ProductDto>> GetProductsAsync(
         bool onlyActive,
         CancellationToken cancellationToken = default)
@@ -182,7 +166,6 @@ public sealed class AdminService : IAdminService
         return products.Select(EntityMapper.ToProductDto).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult<int>> SaveProductAsync(
         ProductEditorDto editor,
         CancellationToken cancellationToken = default)
@@ -216,7 +199,6 @@ public sealed class AdminService : IAdminService
         return OperationResult<int>.Success(product.Id);
     }
 
-    /// <inheritdoc />
     public async Task<OperationResult> SetProductActivityAsync(
         int productId,
         bool isActive,
@@ -239,24 +221,12 @@ public sealed class AdminService : IAdminService
         return OperationResult.Success();
     }
 
-    /// <summary>
-    /// Загружает продукт, который необходимо изменить.
-    /// </summary>
-    /// <param name="context">Контекст базы данных.</param>
-    /// <param name="productId">Идентификатор продукта. Ноль означает создание нового продукта.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Продукт для изменения либо null.</returns>
     private static Task<CreditProduct?> GetProductToEditAsync(
         AppDbContext context,
         int productId,
         CancellationToken cancellationToken) =>
         context.CreditProducts.FirstOrDefaultAsync(product => product.Id == productId, cancellationToken);
 
-    /// <summary>
-    /// Создаёт анкету клиента по данным формы администратора.
-    /// </summary>
-    /// <param name="profile">Данные анкеты.</param>
-    /// <returns>Новая анкета клиента.</returns>
     private static ClientProfile CreateProfile(ClientProfileInputDto profile) => new()
     {
         PassportNumber = profile.PassportNumber.Trim(),
@@ -268,11 +238,6 @@ public sealed class AdminService : IAdminService
         MonthlyExpenses = profile.MonthlyExpenses
     };
 
-    /// <summary>
-    /// Применяет изменения к анкете клиента.
-    /// </summary>
-    /// <param name="profile">Изменяемая анкета.</param>
-    /// <param name="input">Новые данные анкеты.</param>
     private static void ApplyProfileChanges(ClientProfile profile, ClientProfileInputDto input)
     {
         profile.PassportNumber = input.PassportNumber.Trim();
@@ -284,12 +249,6 @@ public sealed class AdminService : IAdminService
         profile.MonthlyExpenses = input.MonthlyExpenses;
     }
 
-    /// <summary>
-    /// Преобразует анкету клиента в данные формы. Используется, когда администратор
-    /// меняет роль сотрудника на «Клиент», не заполняя анкету заново.
-    /// </summary>
-    /// <param name="profile">Имеющаяся анкета либо null.</param>
-    /// <returns>Данные анкеты.</returns>
     private static ClientProfileInputDto ToProfileInput(ClientProfile? profile) => new(
         profile?.PassportNumber ?? string.Empty,
         profile?.BirthDate ?? default,
@@ -299,11 +258,6 @@ public sealed class AdminService : IAdminService
         profile?.MonthlyIncome ?? 0m,
         profile?.MonthlyExpenses ?? 0m);
 
-    /// <summary>
-    /// Применяет изменения к учётной записи.
-    /// </summary>
-    /// <param name="user">Изменяемая учётная запись.</param>
-    /// <param name="editor">Новые данные учётной записи.</param>
     private void ApplyUserChanges(User user, UserEditorDto editor)
     {
         user.FullName = editor.FullName;
@@ -316,11 +270,6 @@ public sealed class AdminService : IAdminService
         }
     }
 
-    /// <summary>
-    /// Применяет изменения к кредитному продукту.
-    /// </summary>
-    /// <param name="product">Изменяемый продукт.</param>
-    /// <param name="editor">Новые данные продукта.</param>
     private static void ApplyProductChanges(CreditProduct product, ProductEditorDto editor)
     {
         product.Name = editor.Name;
@@ -333,11 +282,6 @@ public sealed class AdminService : IAdminService
         product.IsActive = editor.IsActive;
     }
 
-    /// <summary>
-    /// Проверяет данные регистрации новой учётной записи.
-    /// </summary>
-    /// <param name="registration">Данные учётной записи.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateStaffRegistration(StaffRegistrationDto registration)
     {
         if (string.IsNullOrWhiteSpace(registration.Login))
@@ -360,12 +304,6 @@ public sealed class AdminService : IAdminService
             : null;
     }
 
-    /// <summary>
-    /// Проверяет анкету клиента: без неё клиент не сможет подать заявку на кредит,
-    /// поэтому пустые или противоречивые данные не принимаются.
-    /// </summary>
-    /// <param name="profile">Данные анкеты либо null, если они не переданы.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateClientProfile(ClientProfileInputDto? profile)
     {
         if (profile is null)
@@ -415,12 +353,6 @@ public sealed class AdminService : IAdminService
         return profile.MonthlyExpenses >= 0m ? null : "Ежемесячные расходы не могут быть отрицательными.";
     }
 
-    /// <summary>
-    /// Проверяет данные изменения учётной записи.
-    /// </summary>
-    /// <param name="editor">Новые данные учётной записи.</param>
-    /// <param name="administratorUserId">Идентификатор администратора.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateUserEditor(UserEditorDto editor, int administratorUserId)
     {
         if (string.IsNullOrWhiteSpace(editor.FullName))
@@ -448,11 +380,6 @@ public sealed class AdminService : IAdminService
             : null;
     }
 
-    /// <summary>
-    /// Проверяет данные кредитного продукта.
-    /// </summary>
-    /// <param name="editor">Данные продукта.</param>
-    /// <returns>Текст ошибки или null, если данные корректны.</returns>
     private static string? ValidateProduct(ProductEditorDto editor)
     {
         if (string.IsNullOrWhiteSpace(editor.Name))

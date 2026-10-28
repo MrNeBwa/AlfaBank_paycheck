@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!--
-    AlfaBank.Core — библиотечный проект предметной области:
-    модели данных, контекст EF Core, миграции, демо-данные и бизнес-сервисы.
-  -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>AlfaBank.Core</RootNamespace>

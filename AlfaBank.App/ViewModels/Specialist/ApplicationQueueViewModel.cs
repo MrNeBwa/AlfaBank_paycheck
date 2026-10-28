@@ -7,9 +7,6 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Specialist;
 
-/// <summary>
-/// Очередь заявок кредитного специалиста с фильтром по статусу.
-/// </summary>
 public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
 {
     private readonly ICreditSpecialistService _specialistService;
@@ -19,12 +16,6 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
     private ApplicationSummaryDto? _selectedApplication;
     private ApplicationStatus _selectedStatus = ApplicationStatus.All;
 
-    /// <summary>
-    /// Создаёт модель представления очереди заявок.
-    /// </summary>
-    /// <param name="specialistService">Сервис операций кредитного специалиста.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
-    /// <param name="navigationService">Служба навигации между страницами.</param>
     public ApplicationQueueViewModel(
         ICreditSpecialistService specialistService,
         UserSessionHolder userSessionHolder,
@@ -46,29 +37,14 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
         OpenReviewCommand = new RelayCommand(OpenReview, CanOpenReview);
     }
 
-    /// <summary>
-    /// Заявки, попавшие в очередь.
-    /// </summary>
     public ObservableCollection<ApplicationSummaryDto> Applications { get; }
 
-    /// <summary>
-    /// Варианты фильтра по статусу заявки.
-    /// </summary>
     public ObservableCollection<ApplicationStatus> Statuses { get; }
 
-    /// <summary>
-    /// Команда обновления очереди заявок.
-    /// </summary>
     public AsyncRelayCommand ReloadCommand { get; }
 
-    /// <summary>
-    /// Команда перехода к проверке выбранной заявки.
-    /// </summary>
     public RelayCommand OpenReviewCommand { get; }
 
-    /// <summary>
-    /// Выбранный фильтр по статусу заявки.
-    /// </summary>
     public ApplicationStatus SelectedStatus
     {
         get => _selectedStatus;
@@ -81,9 +57,6 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Выбранная заявка из очереди.
-    /// </summary>
     public ApplicationSummaryDto? SelectedApplication
     {
         get => _selectedApplication;
@@ -96,9 +69,6 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Обновляет очередь заявок с учётом выбранного статуса.
-    /// </summary>
     public async Task ReloadAsync()
     {
         var statusFilter = SelectedStatus.DomainStatus;
@@ -120,9 +90,6 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Открывает страницу проверки выбранной заявки.
-    /// </summary>
     private void OpenReview()
     {
         if (SelectedApplication is null)
@@ -137,12 +104,7 @@ public sealed class ApplicationQueueViewModel : ViewModelBase, IPageViewModel
             SelectedApplication.Id));
     }
 
-    /// <summary>
-    /// Определяет доступность перехода к проверке заявки.
-    /// </summary>
-    /// <returns>Значение, если заявка выбрана.</returns>
     private bool CanOpenReview() => SelectedApplication is not null;
 
-    /// <inheritdoc />
     public Task LoadAsync() => ReloadAsync();
 }

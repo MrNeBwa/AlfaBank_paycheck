@@ -4,52 +4,24 @@ using System.Text;
 
 namespace AlfaBank.Core.Security;
 
-/// <summary>
-/// Реализация хэширования паролей по стандарту PBKDF2 (HMAC-SHA256) со случайной солью.
-/// </summary>
 public sealed class Pbkdf2PasswordHasher : IPasswordHasher
 {
-    /// <summary>
-    /// Наименование алгоритма, сохраняемое в начале строки хэша.
-    /// </summary>
     public const string AlgorithmName = "PBKDF2-SHA256";
 
-    /// <summary>
-    /// Количество итераций вычисления хэша.
-    /// </summary>
     public const int IterationsCount = 210_000;
 
-    /// <summary>
-    /// Размер соли в байтах.
-    /// </summary>
     public const int SaltSizeInBytes = 16;
 
-    /// <summary>
-    /// Размер хэша в байтах.
-    /// </summary>
     public const int HashSizeInBytes = 32;
 
-    /// <summary>
-    /// Количество частей в сохраняемой строке хэша.
-    /// </summary>
     private const int HashFormatPartsCount = 4;
 
-    /// <summary>
-    /// Индекс части, содержащей количество итераций.
-    /// </summary>
     private const int IterationsPartIndex = 1;
 
-    /// <summary>
-    /// Индекс части, содержащей соль в кодировке Base64.
-    /// </summary>
     private const int SaltPartIndex = 2;
 
-    /// <summary>
-    /// Индекс части, содержащей хэш в кодировке Base64.
-    /// </summary>
     private const int HashPartIndex = 3;
 
-    /// <inheritdoc />
     public string Hash(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSizeInBytes);
@@ -57,7 +29,6 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
         return Hash(password, Convert.ToBase64String(salt));
     }
 
-    /// <inheritdoc />
     public string Hash(string password, string salt)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(password);
@@ -74,7 +45,6 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
             Convert.ToBase64String(hashBytes));
     }
 
-    /// <inheritdoc />
     public bool Verify(string password, string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(passwordHash))
@@ -112,13 +82,6 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
         return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
     }
 
-    /// <summary>
-    /// Вычисляет хэш пароля для заданной соли и количества итераций.
-    /// </summary>
-    /// <param name="password">Пароль в открытом виде.</param>
-    /// <param name="salt">Соль в байтах.</param>
-    /// <param name="iterations">Количество итераций.</param>
-    /// <returns>Массив байтов хэша.</returns>
     private static byte[] ComputeHash(string password, byte[] salt, int iterations)
     {
         var passwordBytes = Encoding.UTF8.GetBytes(password);

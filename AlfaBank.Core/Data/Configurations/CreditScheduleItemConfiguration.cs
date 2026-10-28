@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы графика платежей по кредиту.
-/// </summary>
 public class CreditScheduleItemConfiguration : IEntityTypeConfiguration<CreditScheduleItem>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<CreditScheduleItem> builder)
     {
         builder.ToTable("CreditScheduleItems");

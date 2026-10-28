@@ -5,11 +5,7 @@
               Language="ru-RU"
               Background="{StaticResource SurfaceBrush}">
 
-    <!--
-        Language="ru-RU" задан явно: форматы {0:N2} в разметке должны совпадать
-        с текстами, которые формирует BankTextFormatter, независимо от языка
-        операционной системы пользователя.
-    -->
+    <!-- ru-RU: форматы {0:N2} в разметке должны совпадать с BankTextFormatter независимо от языка ОС -->
 
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
@@ -26,11 +22,6 @@
                        TextWrapping="Wrap" />
         </Border>
 
-        <!--
-            Сообщение внизу страницы относится только к действию специалиста:
-            текст «Одобрение невозможно…» появляется после нажатия «Одобрить».
-            Пока текста нет, строка скрыта, чтобы пустое место не выглядело ошибкой.
-        -->
         <TextBlock DockPanel.Dock="Bottom"
                    Text="{Binding StatusMessage}">
             <TextBlock.Style>
@@ -54,11 +45,6 @@
             </TextBlock.Style>
         </TextBlock>
 
-        <!--
-            У каждой колонки своя вертикальная прокрутка: блок решения по заявке
-            закреплён внизу правой панели и остаётся на экране при любой длине
-            замечаний, поэтому кнопки «Одобрить» и «Отклонить» не нужно искать.
-        -->
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" MinWidth="280" />
@@ -77,8 +63,6 @@
                                        Style="{StaticResource SectionHeaderStyle}" />
                         </Border>
 
-                        <!-- Подпись и значение в строке: не требует объявления строк сетки,
-                             поэтому поля не могут наложиться друг на друга. -->
                         <DockPanel Style="{StaticResource FormRowStyle}">
                             <TextBlock DockPanel.Dock="Left"
                                        Text="ФИО клиента"
@@ -209,7 +193,6 @@
                     Style="{StaticResource SummaryCardStyle}"
                     Padding="16">
                 <DockPanel>
-                    <!-- Блок решения закреплён внизу: комментарий и кнопки всегда видны. -->
                     <Border DockPanel.Dock="Bottom"
                             BorderBrush="{StaticResource BorderBrush}"
                             BorderThickness="1"
@@ -260,11 +243,6 @@
                                            Style="{StaticResource SectionHeaderStyle}" />
                             </Border>
 
-                            <!--
-                                Блок вердикта: слева крупный балл, справа показатель долговой
-                                нагрузки (ПДН). Цвет фона задаётся выводом скоринга: зелёный при
-                                одобрении, красный при отказе, жёлтый при пограничном ПДН.
-                            -->
                             <Border CornerRadius="8"
                                     Padding="14"
                                     Margin="0,0,0,10"
@@ -296,7 +274,6 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Балльная оценка крупным числом, как в личном кабинете банка. -->
                                     <StackPanel Grid.Column="0"
                                                 Margin="0,0,14,0"
                                                 VerticalAlignment="Center">
@@ -317,11 +294,6 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,6" />
 
-                                        <!--
-                                            ПДН: значение берётся из PaymentSharePercent модели
-                                            представления, подпись и цвет — из того же флага
-                                            IsPaymentShareAcceptable, на котором стоит решение.
-                                        -->
                                         <TextBlock Text="Долговая нагрузка (ПДН)"
                                                    FontSize="11"
                                                    Foreground="{StaticResource NeutralBrush}" />

@@ -10,7 +10,6 @@
         <converters:BooleanToStatusBrushConverter x:Key="ActiveBrush" />
     </UserControl.Resources>
 
-
     <DockPanel Margin="16">
         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
@@ -64,7 +63,6 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Прокрутка формы: в невысоком окне кнопки сохранения иначе не видны. -->
             <ScrollViewer Grid.Column="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
@@ -75,7 +73,6 @@
                     <TextBlock Text="Данные пользователя"
                                Style="{StaticResource SectionHeaderStyle}" />
 
-                    <!-- Показывает, создаётся новая учётная запись или редактируется существующая. -->
                     <Border CornerRadius="6"
                             Padding="10"
                             Margin="0,2,0,12">
@@ -118,7 +115,6 @@
                                Style="{StaticResource HintStyle}"
                                Margin="0,0,0,10" />
 
-                    <!-- Анкета нужна только клиенту: без неё он не сможет подать заявку. -->
                     <StackPanel>
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">

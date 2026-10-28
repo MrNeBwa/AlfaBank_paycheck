@@ -6,9 +6,6 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Client;
 
-/// <summary>
-/// Форма подачи заявки на кредит с предварительным расчётом ежемесячного платежа.
-/// </summary>
 public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
 {
     private readonly IClientService _clientService;
@@ -22,13 +19,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
     private decimal _calculatedPayment;
     private string _limitsText = string.Empty;
 
-    /// <summary>
-    /// Создаёт модель представления формы подачи заявки.
-    /// </summary>
-    /// <param name="clientService">Сервис операций клиента.</param>
-    /// <param name="creditCalculator">Кредитный калькулятор для предварительного расчёта.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
-    /// <param name="overviewPage">Страница со списком заявок, обновляемая после подачи.</param>
     public NewApplicationViewModel(
         IClientService clientService,
         ICreditCalculator creditCalculator,
@@ -45,24 +35,12 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         LoadProductsCommand = new AsyncRelayCommand(LoadProductsAsync, onError: ReportUnexpectedError);
     }
 
-    /// <summary>
-    /// Кредитные продукты, доступные для подачи заявки.
-    /// </summary>
     public ObservableCollection<ProductDto> Products { get; }
 
-    /// <summary>
-    /// Команда загрузки справочника продуктов.
-    /// </summary>
     public AsyncRelayCommand LoadProductsCommand { get; }
 
-    /// <summary>
-    /// Команда отправки заявки на рассмотрение.
-    /// </summary>
     public AsyncRelayCommand SubmitCommand { get; }
 
-    /// <summary>
-    /// Выбранный кредитный продукт.
-    /// </summary>
     public ProductDto? SelectedProduct
     {
         get => _selectedProduct;
@@ -76,9 +54,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Запрашиваемая сумма кредита, введённая пользователем.
-    /// </summary>
     public string AmountText
     {
         get => _amountText;
@@ -91,9 +66,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Запрашиваемый срок кредита в месяцах, введённый пользователем.
-    /// </summary>
     public string TermText
     {
         get => _termText;
@@ -106,27 +78,18 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Предварительный ежемесячный платёж по аннуитетной схеме.
-    /// </summary>
     public decimal CalculatedPayment
     {
         get => _calculatedPayment;
         private set => SetProperty(ref _calculatedPayment, value);
     }
 
-    /// <summary>
-    /// Напоминание о лимитах выбранного продукта.
-    /// </summary>
     public string LimitsText
     {
         get => _limitsText;
         private set => SetProperty(ref _limitsText, value);
     }
 
-    /// <summary>
-    /// Загружает справочник кредитных продуктов.
-    /// </summary>
     public async Task LoadProductsAsync()
     {
         await ExecuteGuardedAsync(async () =>
@@ -149,9 +112,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Отправляет заявку на рассмотрение кредитному специалисту.
-    /// </summary>
     private async Task SubmitAsync()
     {
         var clientProfileId = _userSessionHolder.CurrentUser?.ClientProfileId;
@@ -187,9 +147,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         await _overviewPage.ReloadAsync();
     }
 
-    /// <summary>
-    /// Пересчитывает предварительный ежемесячный платёж по введённым данным.
-    /// </summary>
     private void RecalculatePayment()
     {
         CalculatedPayment = SelectedProduct is null || !TryParseAmount() || !TryParseTerm()
@@ -199,13 +156,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
         SubmitCommand.RaiseCanExecuteChanged();
     }
 
-    /// <summary>
-    /// Определяет, можно ли отправить заявку.
-    /// Кнопка отправки блокируется, пока продукт не выбран и данные не введены
-    /// в пределах лимитов продукта: раньше она выглядела доступной всегда,
-    /// но нажатие без данных не давало никакого результата.
-    /// </summary>
-    /// <returns>Значение, если заявка готова к отправке.</returns>
     private bool CanSubmit()
     {
         if (SelectedProduct is null || !TryParseAmount() || !TryParseTerm())
@@ -222,9 +172,6 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
                && term <= SelectedProduct.MaxTermMonths;
     }
 
-    /// <summary>
-    /// Формирует текст с лимитами выбранного продукта.
-    /// </summary>
     private void UpdateLimitsText() =>
         LimitsText = SelectedProduct is null
             ? "Выберите кредитный продукт."
@@ -232,34 +179,17 @@ public sealed class NewApplicationViewModel : ViewModelBase, IPageViewModel
               $"срок от {SelectedProduct.MinTermMonths} до {SelectedProduct.MaxTermMonths} мес., " +
               $"ставка {SelectedProduct.AnnualInterestRate:0.##}% годовых. {SelectedProduct.Description}";
 
-    /// <summary>
-    /// Разбирает введённую сумму кредита.
-    /// </summary>
-    /// <returns>Сумма кредита в рублях.</returns>
     private decimal ParseAmount() =>
         decimal.TryParse(AmountText, NumberStyles.Any, CultureInfo.CurrentCulture, out var amount) ? amount : 0m;
 
-    /// <summary>
-    /// Разбирает введённый срок кредита.
-    /// </summary>
-    /// <returns>Срок кредита в месяцах.</returns>
     private int ParseTerm() =>
         int.TryParse(TermText, NumberStyles.Integer, CultureInfo.CurrentCulture, out var term) ? term : 0;
 
-    /// <summary>
-    /// Проверяет корректность введённой суммы.
-    /// </summary>
-    /// <returns>Значение, если сумма введена.</returns>
     private bool TryParseAmount() =>
         decimal.TryParse(AmountText, NumberStyles.Any, CultureInfo.CurrentCulture, out var amount) && amount > 0m;
 
-    /// <summary>
-    /// Проверяет корректность введённого срока.
-    /// </summary>
-    /// <returns>Значение, если срок введён.</returns>
     private bool TryParseTerm() =>
         int.TryParse(TermText, NumberStyles.Integer, CultureInfo.CurrentCulture, out var term) && term > 0;
 
-    /// <inheritdoc />
     public Task LoadAsync() => LoadProductsAsync();
 }

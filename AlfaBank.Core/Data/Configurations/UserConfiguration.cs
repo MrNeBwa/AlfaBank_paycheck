@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы учётных записей пользователей.
-/// </summary>
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("Users");

@@ -124,7 +124,6 @@
                                             <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BrandRedLightBrush}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <!-- Выбранный пункт подсвечивается фирменным красным. -->
                                             <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BrandRedBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>

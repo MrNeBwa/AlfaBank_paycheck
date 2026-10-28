@@ -6,16 +6,8 @@ using System.Windows.Media;
 
 namespace AlfaBank.App.Infrastructure;
 
-/// <summary>
-/// Снимает выделение с элемента списка, если щелчок сделан по пустому месту,
-/// а также по нажатию клавиши Escape. Снимает главную проблему интерфейса:
-/// выделенная строка остаётся подсвеченной, пока пользователь не щёлкнет по другой.
-/// </summary>
 public static class ClearSelection
 {
-    /// <summary>
-    /// Включает поведение снятия выделения для указанного списка или таблицы.
-    /// </summary>
     public static readonly DependencyProperty IsEnabledProperty =
         DependencyProperty.RegisterAttached(
             "IsEnabled",
@@ -23,19 +15,9 @@ public static class ClearSelection
             typeof(ClearSelection),
             new PropertyMetadata(false, OnIsEnabledChanged));
 
-    /// <summary>
-    /// Задаёт признак включения поведения снятия выделения.
-    /// </summary>
-    /// <param name="element">Список или таблица.</param>
-    /// <param name="value">Признак включения.</param>
     public static void SetIsEnabled(DependencyObject element, bool value) =>
         element.SetValue(IsEnabledProperty, value);
 
-    /// <summary>
-    /// Возвращает признак включения поведения снятия выделения.
-    /// </summary>
-    /// <param name="element">Список или таблица.</param>
-    /// <returns>Признак включения.</returns>
     public static bool GetIsEnabled(DependencyObject element) =>
         (bool)element.GetValue(IsEnabledProperty);
 
@@ -66,9 +48,6 @@ public static class ClearSelection
         }
 
         var source = args.OriginalSource as DependencyObject;
-
-        // Щелчок по строке, ячейке или заголовку столбца не должен снимать выделение:
-        // там по-прежнему работает выбор строки и сортировка.
         if (FindAncestor<DataGridCell>(source) is not null
             || FindAncestor<DataGridColumnHeader>(source) is not null
             || FindAncestor<ListBoxItem>(source) is not null

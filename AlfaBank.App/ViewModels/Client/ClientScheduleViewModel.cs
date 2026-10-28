@@ -6,9 +6,6 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Client;
 
-/// <summary>
-/// Страница клиента с графиком платежей по кредитам и внесёнными платежами.
-/// </summary>
 public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
 {
     private const string ProfileMissingMessage = "Анкета клиента не найдена. Обратитесь к администратору.";
@@ -19,11 +16,6 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
     private CreditSummaryDto? _selectedCredit;
     private ScheduleRowDto? _selectedScheduleItem;
 
-    /// <summary>
-    /// Создаёт модель представления страницы графиков платежей.
-    /// </summary>
-    /// <param name="clientService">Сервис операций клиента.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
     public ClientScheduleViewModel(IClientService clientService, UserSessionHolder userSessionHolder)
     {
         _clientService = clientService;
@@ -37,34 +29,16 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
         ReloadScheduleCommand = new AsyncRelayCommand(ReloadScheduleAsync, onError: ReportUnexpectedError);
     }
 
-    /// <summary>
-    /// Кредиты клиента.
-    /// </summary>
     public ObservableCollection<CreditSummaryDto> Credits { get; }
 
-    /// <summary>
-    /// Платежи по выбранному кредиту.
-    /// </summary>
     public ObservableCollection<ScheduleRowDto> ScheduleItems { get; }
 
-    /// <summary>
-    /// Все внесённые клиентом платежи.
-    /// </summary>
     public ObservableCollection<PaymentDto> Payments { get; }
 
-    /// <summary>
-    /// Команда обновления данных страницы.
-    /// </summary>
     public AsyncRelayCommand ReloadCommand { get; }
 
-    /// <summary>
-    /// Команда обновления графика по выбранному кредиту.
-    /// </summary>
     public AsyncRelayCommand ReloadScheduleCommand { get; }
 
-    /// <summary>
-    /// Выбранный кредит.
-    /// </summary>
     public CreditSummaryDto? SelectedCredit
     {
         get => _selectedCredit;
@@ -78,24 +52,15 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Выбранный платёж графика.
-    /// </summary>
     public ScheduleRowDto? SelectedScheduleItem
     {
         get => _selectedScheduleItem;
         set => SetProperty(ref _selectedScheduleItem, value);
     }
 
-    /// <summary>
-    /// Количество оплаченных платежей по выбранному кредиту.
-    /// </summary>
     public int PaidCount =>
         ScheduleItems.Count(item => item.Status == ScheduleItemStatus.Paid);
 
-    /// <summary>
-    /// Обновляет список кредитов и платежей клиента.
-    /// </summary>
     public async Task ReloadAsync()
     {
         var clientProfileId = _userSessionHolder.CurrentUser?.ClientProfileId;
@@ -134,9 +99,6 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Обновляет график платежей по выбранному кредиту.
-    /// </summary>
     private async Task ReloadScheduleAsync()
     {
         var clientProfileId = _userSessionHolder.CurrentUser?.ClientProfileId;
@@ -168,6 +130,5 @@ public sealed class ClientScheduleViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <inheritdoc />
     public Task LoadAsync() => ReloadAsync();
 }
