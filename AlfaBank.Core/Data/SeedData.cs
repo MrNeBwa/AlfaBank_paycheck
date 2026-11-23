@@ -5,80 +5,34 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlfaBank.Core.Data;
 
-/// <summary>
-/// Демонстрационные данные проекта: учётные записи, анкеты клиентов и кредитные продукты.
-/// Данные фиксируются в модели средствами Code First (HasData) и попадают в базу при миграции.
-/// </summary>
 public static class SeedData
 {
-    /// <summary>
-    /// Логин кредитного специалиста.
-    /// </summary>
     public const string SpecialistLogin = "specialist";
 
-    /// <summary>
-    /// Пароль кредитного специалиста.
-    /// </summary>
     public const string SpecialistPassword = "Specialist2024";
 
-    /// <summary>
-    /// Логин администратора.
-    /// </summary>
     public const string AdministratorLogin = "administrator";
 
-    /// <summary>
-    /// Пароль администратора.
-    /// </summary>
     public const string AdministratorPassword = "Administrator2024";
 
-    /// <summary>
-    /// Логин первого демонстрационного клиента.
-    /// </summary>
     public const string FirstClientLogin = "client";
 
-    /// <summary>
-    /// Логин второго демонстрационного клиента.
-    /// </summary>
     public const string SecondClientLogin = "client2";
 
-    /// <summary>
-    /// Пароль демонстрационных клиентов.
-    /// </summary>
     public const string ClientPassword = "Client2024";
 
-    /// <summary>
-    /// Идентификатор учётной записи кредитного специалиста.
-    /// </summary>
     public const int SpecialistUserId = 1;
 
-    /// <summary>
-    /// Идентификатор учётной записи администратора.
-    /// </summary>
     public const int AdministratorUserId = 2;
 
-    /// <summary>
-    /// Идентификатор учётной записи первого клиента.
-    /// </summary>
     public const int FirstClientUserId = 3;
 
-    /// <summary>
-    /// Идентификатор учётной записи второго клиента.
-    /// </summary>
     public const int SecondClientUserId = 4;
 
-    /// <summary>
-    /// Идентификатор анкеты первого клиента.
-    /// </summary>
     public const int FirstClientProfileId = 1;
 
-    /// <summary>
-    /// Идентификатор анкеты второго клиента.
-    /// </summary>
     public const int SecondClientProfileId = 2;
 
-    /// <summary>
-    /// Фиксированная дата регистрации демонстрационных записей.
-    /// </summary>
     private static readonly DateTime SeedTimestamp = new(2024, 1, 15, 9, 0, 0, DateTimeKind.Unspecified);
 
     private static readonly Pbkdf2PasswordHasher PasswordHasher = new();
@@ -95,10 +49,6 @@ public static class SeedData
     private static readonly string SecondClientPasswordHash =
         PasswordHasher.Hash(ClientPassword, "YYHFp2WHnQA7lebRkA7u7w==");
 
-    /// <summary>
-    /// Добавляет демонстрационные данные в модель данных.
-    /// </summary>
-    /// <param name="modelBuilder">Построитель модели данных.</param>
     public static void Configure(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -108,10 +58,6 @@ public static class SeedData
         modelBuilder.Entity<ClientProfile>().HasData(CreateClientProfiles());
     }
 
-    /// <summary>
-    /// Создаёт три демонстрационных кредитных продукта.
-    /// </summary>
-    /// <returns>Коллекция кредитных продуктов.</returns>
     private static CreditProduct[] CreateCreditProducts() =>
     [
         new CreditProduct
@@ -155,10 +101,6 @@ public static class SeedData
         }
     ];
 
-    /// <summary>
-    /// Создаёт учётные записи двух клиентов, кредитного специалиста и администратора.
-    /// </summary>
-    /// <returns>Коллекция пользователей.</returns>
     private static User[] CreateUsers() =>
     [
         new User
@@ -203,10 +145,6 @@ public static class SeedData
         }
     ];
 
-    /// <summary>
-    /// Создаёт анкеты двух демонстрационных клиентов.
-    /// </summary>
-    /// <returns>Коллекция анкет клиентов.</returns>
     private static ClientProfile[] CreateClientProfiles() =>
     [
         new ClientProfile

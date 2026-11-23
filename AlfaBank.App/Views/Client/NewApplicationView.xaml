@@ -10,7 +10,6 @@
                        Margin="0" />
         </Border>
 
-        <!-- Прокрутка: в невысоком окне кнопка отправки иначе уходит за нижний край. -->
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <Border Style="{StaticResource SummaryCardStyle}"

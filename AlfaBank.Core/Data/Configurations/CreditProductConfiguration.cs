@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы справочника кредитных продуктов.
-/// </summary>
 public class CreditProductConfiguration : IEntityTypeConfiguration<CreditProduct>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<CreditProduct> builder)
     {
         builder.ToTable("CreditProducts");

@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы анкет клиентов.
-/// </summary>
 public class ClientProfileConfiguration : IEntityTypeConfiguration<ClientProfile>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<ClientProfile> builder)
     {
         builder.ToTable("ClientProfiles");

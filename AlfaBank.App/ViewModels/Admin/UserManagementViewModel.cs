@@ -7,14 +7,8 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Admin;
 
-/// <summary>
-/// Управление пользователями: просмотр, регистрация сотрудников и изменение ролей.
-/// </summary>
 public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
 {
-    /// <summary>
-    /// Дата рождения по умолчанию: возраст 30 лет, то есть заведомо допустимый.
-    /// </summary>
     private static readonly DateTime DefaultBirthDate = DateTime.Today.AddYears(-30);
 
     private readonly IAdminService _adminService;
@@ -36,11 +30,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
     private decimal _monthlyIncome;
     private decimal _monthlyExpenses;
 
-    /// <summary>
-    /// Создаёт модель представления управления пользователями.
-    /// </summary>
-    /// <param name="adminService">Сервис операций администратора.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
     public UserManagementViewModel(IAdminService adminService, UserSessionHolder userSessionHolder)
     {
         _adminService = adminService;
@@ -59,42 +48,18 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         ClearCommand = new RelayCommand(ClearForm);
     }
 
-    /// <summary>
-    /// Пользователи системы.
-    /// </summary>
     public ObservableCollection<UserDto> Users { get; }
 
-    /// <summary>
-    /// Роли, доступные для назначения сотруднику.
-    /// Список строится по всем значениям перечисления и дополняется на лету,
-    /// поэтому роль существующего пользователя всегда есть в списке и не может
-    /// молча подмениться другой при сохранении.
-    /// </summary>
     public ObservableCollection<RoleOption> Roles => _roles;
 
-    /// <summary>
-    /// Команда обновления списка пользователей.
-    /// </summary>
     public AsyncRelayCommand ReloadCommand { get; }
 
-    /// <summary>
-    /// Команда регистрации нового сотрудника.
-    /// </summary>
     public AsyncRelayCommand RegisterCommand { get; }
 
-    /// <summary>
-    /// Команда сохранения изменений в учётной записи.
-    /// </summary>
     public AsyncRelayCommand SaveCommand { get; }
 
-    /// <summary>
-    /// Команда очистки формы.
-    /// </summary>
     public RelayCommand ClearCommand { get; }
 
-    /// <summary>
-    /// Выбранный пользователь из списка.
-    /// </summary>
     public UserDto? SelectedUser
     {
         get => _selectedUser;
@@ -112,45 +77,30 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Логин нового сотрудника.
-    /// </summary>
     public string Login
     {
         get => _login;
         set => SetProperty(ref _login, value);
     }
 
-    /// <summary>
-    /// Полное имя пользователя.
-    /// </summary>
     public string FullName
     {
         get => _fullName;
         set => SetProperty(ref _fullName, value);
     }
 
-    /// <summary>
-    /// Новый пароль. Пустое значение означает, что пароль не изменяется.
-    /// </summary>
     public string Password
     {
         get => _password;
         set => SetProperty(ref _password, value);
     }
 
-    /// <summary>
-    /// Признак активной учётной записи.
-    /// </summary>
     public bool IsActive
     {
         get => _isActive;
         set => SetProperty(ref _isActive, value);
     }
 
-    /// <summary>
-    /// Выбранная роль сотрудника.
-    /// </summary>
     public RoleOption? SelectedRole
     {
         get => _selectedRole;
@@ -158,84 +108,55 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         {
             if (SetProperty(ref _selectedRole, value))
             {
-                // Поля анкеты показываются только для роли «Клиент»:
-                // у сотрудников банка анкеты нет, и она им не нужна.
                 OnPropertyChanged(nameof(IsClientRoleSelected));
             }
         }
     }
 
-    /// <summary>
-    /// Признак того, что выбрана роль клиента и требуется заполнить анкету.
-    /// </summary>
     public bool IsClientRoleSelected => SelectedRole?.Role == UserRole.Client;
 
-    /// <summary>
-    /// Номер и серия паспорта клиента.
-    /// </summary>
     public string PassportNumber
     {
         get => _passportNumber;
         set => SetProperty(ref _passportNumber, value);
     }
 
-    /// <summary>
-    /// Дата рождения клиента.
-    /// </summary>
     public DateTime BirthDate
     {
         get => _birthDate;
         set => SetProperty(ref _birthDate, value);
     }
 
-    /// <summary>
-    /// Адрес регистрации клиента.
-    /// </summary>
     public string RegistrationAddress
     {
         get => _registrationAddress;
         set => SetProperty(ref _registrationAddress, value);
     }
 
-    /// <summary>
-    /// Место работы клиента.
-    /// </summary>
     public string EmployerName
     {
         get => _employerName;
         set => SetProperty(ref _employerName, value);
     }
 
-    /// <summary>
-    /// Стаж работы клиента на текущем месте в месяцах.
-    /// </summary>
     public int EmploymentMonths
     {
         get => _employmentMonths;
         set => SetProperty(ref _employmentMonths, value);
     }
 
-    /// <summary>
-    /// Ежемесячный доход клиента в рублях.
-    /// </summary>
     public decimal MonthlyIncome
     {
         get => _monthlyIncome;
         set => SetProperty(ref _monthlyIncome, value);
     }
 
-    /// <summary>
-    /// Ежемесячные расходы клиента в рублях.
-    /// </summary>
     public decimal MonthlyExpenses
     {
         get => _monthlyExpenses;
         set => SetProperty(ref _monthlyExpenses, value);
     }
 
-    /// <summary>
-    /// Признак режима редактирования существующей учётной записи.
-    /// </summary>
     public bool IsEditingExistingUser
     {
         get => _isEditingExistingUser;
@@ -248,25 +169,16 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Заголовок формы: показывает, создаётся учётная запись или редактируется существующая.
-    /// </summary>
     public string FormModeText => IsEditingExistingUser && SelectedUser is not null
         ? $"Редактирование учётной записи «{SelectedUser.Login}»"
         : "Новая учётная запись сотрудника";
 
-    /// <summary>
-    /// Обновляет список пользователей.
-    /// </summary>
     public async Task ReloadAsync()
     {
         await ExecuteGuardedAsync(async () =>
         {
             var users = await _adminService.GetUsersAsync();
 
-            // Режим формы запоминается до перезагрузки: таблица при заполнении
-            // может выделить строку по собственному усмотрению, и тогда форма
-            // перешла бы в режим правки без всякого выбора пользователя.
             var wasEditing = IsEditingExistingUser;
             var editingId = SelectedUser?.Id;
 
@@ -277,8 +189,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
                 Users.Add(user);
             }
 
-            // После перезагрузки все элементы коллекции новые, поэтому в режиме
-            // правки выделенная строка и форма соответствуют прежнему сотруднику.
             SelectedUser = wasEditing && editingId is int id
                 ? Users.FirstOrDefault(user => user.Id == id)
                 : null;
@@ -287,9 +197,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Регистрирует нового пользователя банка.
-    /// </summary>
     private async Task RegisterAsync()
     {
         var userName = FullName.Trim();
@@ -322,16 +229,12 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
             return;
         }
 
-        // Форма очищается до вывода результата, иначе очистка стёрла бы сообщение.
         ClearForm();
         await ReloadAsync();
 
         ShowSuccess($"Пользователь {userName} зарегистрирован.");
     }
 
-    /// <summary>
-    /// Сохраняет изменения в выбранной учётной записи.
-    /// </summary>
     private async Task SaveAsync()
     {
         if (SelectedUser is null)
@@ -373,17 +276,12 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
             return;
         }
 
-        // Форма очищается до вывода результата, иначе очистка стёрла бы сообщение.
         ClearForm();
         await ReloadAsync();
 
         ShowSuccess($"Данные пользователя {userLogin} сохранены.");
     }
 
-    /// <summary>
-    /// Собирает анкету клиента из полей формы.
-    /// </summary>
-    /// <returns>Данные анкеты клиента.</returns>
     private ClientProfileInputDto BuildProfile() => new(
         PassportNumber.Trim(),
         DateOnly.FromDateTime(BirthDate),
@@ -393,10 +291,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         MonthlyIncome,
         MonthlyExpenses);
 
-    /// <summary>
-    /// Заполняет форму данными выбранного пользователя.
-    /// </summary>
-    /// <param name="user">Выбранный пользователь.</param>
     private void FillFormFromUser(UserDto user)
     {
         Login = user.Login;
@@ -408,14 +302,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         IsEditingExistingUser = true;
     }
 
-    /// <summary>
-    /// Возвращает роль из списка, при необходимости добавляя её в список.
-    /// Раньше здесь применялась подстановка первого элемента списка, и роль
-    /// пользователя менялась без предупреждения: клиент сохранялся как
-    /// кредитный специалист, пока варианта «Клиент» в списке не было.
-    /// </summary>
-    /// <param name="role">Роль пользователя.</param>
-    /// <returns>Элемент списка ролей с этой ролью.</returns>
     private RoleOption EnsureRoleIsListed(UserRole role)
     {
         var existing = Roles.FirstOrDefault(option => option.Role == role);
@@ -431,10 +317,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         return added;
     }
 
-    /// <summary>
-    /// Заполняет поля анкеты клиента.
-    /// </summary>
-    /// <param name="profile">Анкета выбранного пользователя либо null для сотрудников банка.</param>
     private void FillProfile(ClientProfileInputDto? profile)
     {
         PassportNumber = profile?.PassportNumber ?? string.Empty;
@@ -446,9 +328,6 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         MonthlyExpenses = profile?.MonthlyExpenses ?? 0m;
     }
 
-    /// <summary>
-    /// Очищает форму и переводит её в режим регистрации новой учётной записи.
-    /// </summary>
     private void ClearForm()
     {
         SelectedUser = null;
@@ -462,17 +341,8 @@ public sealed class UserManagementViewModel : ViewModelBase, IPageViewModel
         StatusMessage = string.Empty;
     }
 
-    /// <summary>
-    /// Идентификатор администратора, выполняющего изменения.
-    /// </summary>
     private int CurrentAdministratorId => _userSessionHolder.CurrentUser?.UserId ?? 0;
 
-    /// <summary>
-    /// Открывает страницу управления сотрудниками.
-    /// Модель представления переиспользуется всю сессию, поэтому при каждом открытии
-    /// страницы форма возвращается в режим регистрации: иначе она осталась бы
-    /// в режиме правки выбранного сотрудника, и поле логин было бы заблокировано.
-    /// </summary>
     public async Task LoadAsync()
     {
         ClearForm();

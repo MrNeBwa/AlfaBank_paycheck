@@ -4,16 +4,8 @@ using Microsoft.Data.SqlClient;
 
 namespace AlfaBank.Core.Data;
 
-/// <summary>
-/// Подготавливает базу данных к работе: применяет миграции и проверяет наличие демонстрационных данных.
-/// </summary>
 public static class DbInitializer
 {
-    /// <summary>
-    /// Применяет все миграции к базе данных.
-    /// </summary>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Результат инициализации с количеством пользователей в базе.</returns>
     public static async Task<OperationResult<int>> InitializeAsync(CancellationToken cancellationToken = default)
     {
         try

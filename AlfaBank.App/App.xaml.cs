@@ -8,12 +8,8 @@ using AlfaBank.App.Views;
 
 namespace AlfaBank.App;
 
-/// <summary>
-/// Класс приложения: инициализация базы данных, сбор зависимостей и запуск окон.
-/// </summary>
 public partial class App : Application
 {
-    /// <inheritdoc />
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -22,9 +18,6 @@ public partial class App : Application
         await RunAsync();
     }
 
-    /// <summary>
-    /// Запускает проверку базы данных и цикл работы программы: вход и главное окно.
-    /// </summary>
     private async Task RunAsync()
     {
         var initializationResult = await DbInitializer.InitializeAsync();
@@ -69,9 +62,6 @@ public partial class App : Application
         Shutdown();
     }
 
-    /// <summary>
-    /// Задаёт русскую культуру интерфейса: форматы чисел и дат в элементах управления.
-    /// </summary>
     private static void ApplyRussianCulture()
     {
         var russianCulture = new CultureInfo("ru-RU");

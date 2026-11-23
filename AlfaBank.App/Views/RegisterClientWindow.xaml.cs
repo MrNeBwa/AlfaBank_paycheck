@@ -4,14 +4,8 @@ using AlfaBank.App.ViewModels;
 
 namespace AlfaBank.App.Views;
 
-/// <summary>
-/// Окно самостоятельной регистрации клиента.
-/// </summary>
 public partial class RegisterClientWindow : Window
 {
-    /// <summary>
-    /// Создаёт окно регистрации клиента.
-    /// </summary>
     public RegisterClientWindow()
     {
         InitializeComponent();
@@ -19,11 +13,6 @@ public partial class RegisterClientWindow : Window
         DataContextChanged += OnDataContextChanged;
     }
 
-    /// <summary>
-    /// Подписывает окно на уведомления модели представления при смене контекста данных.
-    /// </summary>
-    /// <param name="sender">Источник события.</param>
-    /// <param name="e">Данные изменения контекста данных.</param>
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is RegisterClientViewModel previousViewModel)
@@ -37,11 +26,6 @@ public partial class RegisterClientWindow : Window
         }
     }
 
-    /// <summary>
-    /// Закрывает окно после успешной регистрации клиента.
-    /// </summary>
-    /// <param name="sender">Источник события.</param>
-    /// <param name="e">Данные изменения свойства модели представления.</param>
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is RegisterClientViewModel viewModel

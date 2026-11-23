@@ -7,9 +7,6 @@ using AlfaBank.App.Infrastructure;
 
 namespace AlfaBank.App.ViewModels.Specialist;
 
-/// <summary>
-/// Портфель выданных кредитов: график платежей и регистрация платежей клиентов.
-/// </summary>
 public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
 {
     private const string PaymentDateFormat = "dd.MM.yyyy";
@@ -24,11 +21,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
     private string _paymentAmountText = string.Empty;
     private string _paymentComment = string.Empty;
 
-    /// <summary>
-    /// Создаёт модель представления портфеля кредитов.
-    /// </summary>
-    /// <param name="specialistService">Сервис операций кредитного специалиста.</param>
-    /// <param name="userSessionHolder">Хранилище данных текущего пользователя.</param>
     public CreditPortfolioViewModel(
         ICreditSpecialistService specialistService,
         UserSessionHolder userSessionHolder)
@@ -45,48 +37,24 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         RegisterPaymentCommand = new AsyncRelayCommand(RegisterPaymentAsync, CanRegisterPayment, onError: ReportUnexpectedError);
     }
 
-    /// <summary>
-    /// Кредиты клиентов банка.
-    /// </summary>
     public ObservableCollection<CreditSummaryDto> Credits { get; }
 
-    /// <summary>
-    /// График платежей по выбранному кредиту.
-    /// </summary>
     public ObservableCollection<ScheduleRowDto> ScheduleItems { get; }
 
-    /// <summary>
-    /// Платёжи по выбранному кредиту.
-    /// </summary>
     public ObservableCollection<PaymentDto> Payments { get; }
 
-    /// <summary>
-    /// Команда обновления портфеля кредитов.
-    /// </summary>
     public AsyncRelayCommand ReloadCommand { get; }
 
-    /// <summary>
-    /// Команда открытия графика платежей по выбранному кредиту.
-    /// </summary>
     public AsyncRelayCommand SelectCreditCommand { get; }
 
-    /// <summary>
-    /// Команда регистрации платежа клиента.
-    /// </summary>
     public AsyncRelayCommand RegisterPaymentCommand { get; }
 
-    /// <summary>
-    /// Поисковый запрос: фрагмент ФИО клиента или названия продукта.
-    /// </summary>
     public string SearchText
     {
         get => _searchText;
         set => SetProperty(ref _searchText, value);
     }
 
-    /// <summary>
-    /// Выбранный кредит.
-    /// </summary>
     public CreditSummaryDto? SelectedCredit
     {
         get => _selectedCredit;
@@ -100,9 +68,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Выбранный платёж графика, предназначенный для оплаты.
-    /// </summary>
     public ScheduleRowDto? SelectedScheduleItem
     {
         get => _selectedScheduleItem;
@@ -121,9 +86,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Дата платежа клиента, введённая специалистом.
-    /// </summary>
     public string PaymentDateText
     {
         get => _paymentDateText;
@@ -136,9 +98,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Сумма платежа клиента, введённая специалистом.
-    /// </summary>
     public string PaymentAmountText
     {
         get => _paymentAmountText;
@@ -151,27 +110,18 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         }
     }
 
-    /// <summary>
-    /// Комментарий специалиста к платежу.
-    /// </summary>
     public string PaymentComment
     {
         get => _paymentComment;
         set => SetProperty(ref _paymentComment, value);
     }
 
-    /// <summary>
-    /// Обновляет портфель кредитов с учётом поискового запроса.
-    /// </summary>
     public async Task ReloadAsync()
     {
         await ExecuteGuardedAsync(async () =>
         {
             var credits = await _specialistService.GetCreditsAsync(SearchText.Trim());
 
-            // Выбранный кредит запоминается по номеру: после перезагрузки списка
-            // он должен остаться выделенным, иначе после регистрации платежа
-            // специалист терял открытый график.
             var previousCreditId = SelectedCredit?.Id;
 
             Credits.Clear();
@@ -189,9 +139,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Загружает график платежей и историю платежей по выбранному кредиту.
-    /// </summary>
     private async Task SelectCreditAsync()
     {
         if (SelectedCredit is null)
@@ -228,9 +175,6 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         });
     }
 
-    /// <summary>
-    /// Регистрирует платёж клиента по выбранному плану графика.
-    /// </summary>
     private async Task RegisterPaymentAsync()
     {
         if (SelectedCredit is null || SelectedScheduleItem is null)
@@ -266,16 +210,8 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         await SelectCreditAsync();
     }
 
-    /// <summary>
-    /// Определяет доступность загрузки графика по выбранному кредиту.
-    /// </summary>
-    /// <returns>Значение, если кредит выбран.</returns>
     private bool CanSelectCredit() => SelectedCredit is not null;
 
-    /// <summary>
-    /// Определяет доступность регистрации платежа.
-    /// </summary>
-    /// <returns>Значение, если выбран непогашенный план графика и заполнены реквизиты платежа.</returns>
     private bool CanRegisterPayment() =>
         SelectedCredit is not null
         && SelectedScheduleItem is not null
@@ -284,19 +220,11 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
         && TryParsePaymentDate()
         && ParsePaymentAmount() >= 0.01m;
 
-    /// <summary>
-    /// Разбирает введённую дату платежа.
-    /// </summary>
-    /// <returns>Дата платежа. При ошибке ввода возвращается текущая дата.</returns>
     private DateOnly ParsePaymentDate() =>
         TryParsePaymentDate()
             ? DateOnly.ParseExact(PaymentDateText, PaymentDateFormat)
             : DateOnly.FromDateTime(DateTime.Today);
 
-    /// <summary>
-    /// Разбирает введённую сумму платежа.
-    /// </summary>
-    /// <returns>Сумма платежа в рублях.</returns>
     private decimal ParsePaymentAmount() =>
         decimal.TryParse(PaymentAmountText, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount)
             ? amount
@@ -304,18 +232,10 @@ public sealed class CreditPortfolioViewModel : ViewModelBase, IPageViewModel
                 ? amount
                 : 0m;
 
-    /// <summary>
-    /// Проверяет корректность введённой даты платежа.
-    /// </summary>
-    /// <returns>Значение, если дата введена верно.</returns>
     private bool TryParsePaymentDate() =>
         DateOnly.TryParseExact(PaymentDateText, PaymentDateFormat, out _);
 
-    /// <summary>
-    /// Идентификатор кредитного специалиста, работающего с кредитом.
-    /// </summary>
     private int CurrentSpecialistId => _userSessionHolder.CurrentUser?.UserId ?? 0;
 
-    /// <inheritdoc />
     public Task LoadAsync() => ReloadAsync();
 }

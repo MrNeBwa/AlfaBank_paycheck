@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы истории изменения статусов заявок.
-/// </summary>
 public class ApplicationStatusHistoryConfiguration : IEntityTypeConfiguration<ApplicationStatusHistory>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<ApplicationStatusHistory> builder)
     {
         builder.ToTable("ApplicationStatusHistory");

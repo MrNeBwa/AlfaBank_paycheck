@@ -77,7 +77,6 @@
                             Click="OnRegisterClientClick" />
                 </StackPanel>
 
-                <!-- Сообщение и подсказка занимают разные строки, иначе они накладываются друг на друга. -->
                 <TextBlock Grid.Row="7"
                            Style="{StaticResource StatusMessageStyle}"
                            Text="{Binding StatusMessage}" />

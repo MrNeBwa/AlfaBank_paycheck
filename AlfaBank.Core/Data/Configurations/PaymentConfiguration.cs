@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AlfaBank.Core.Data.Configurations;
 
-/// <summary>
-/// Конфигурация таблицы платежей по кредитам.
-/// </summary>
 public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Payment> builder)
     {
         builder.ToTable("Payments");

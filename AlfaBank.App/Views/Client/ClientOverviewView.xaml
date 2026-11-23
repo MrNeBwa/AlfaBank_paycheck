@@ -18,7 +18,6 @@
                 Style="{StaticResource SecondaryButtonStyle}"
                 Command="{Binding ReloadCommand}" />
 
-        <!-- Прокрутка: в невысоком окне сводка и таблица заявок должны оставаться доступны. -->
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
@@ -28,8 +27,6 @@
                            Margin="0" />
             </Border>
 
-                <!-- Перенос карточек: в узком окне они складываются в несколько рядов,
-                     а не сжимаются в нечитаемую полосу. -->
                 <WrapPanel Margin="0,0,0,16">
                     <Border Style="{StaticResource SummaryCardStyle}">
                         <StackPanel>

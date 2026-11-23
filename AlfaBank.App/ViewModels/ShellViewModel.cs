@@ -7,14 +7,8 @@ using AlfaBank.App.ViewModels.Specialist;
 
 namespace AlfaBank.App.ViewModels;
 
-/// <summary>
-/// Модель представления главного окна программы: меню навигации и завершение сеанса.
-/// </summary>
 public sealed class ShellViewModel : ViewModelBase
 {
-    /// <summary>
-    /// Название банка, отображаемое в заголовке окна.
-    /// </summary>
     public const string ApplicationTitle = "Альфабанк — автоматизация кредитных операций";
 
     private readonly UserSessionHolder _userSessionHolder;
@@ -23,10 +17,6 @@ public sealed class ShellViewModel : ViewModelBase
     private NavigationItem? _selectedItem;
     private bool _isSignedOut;
 
-    /// <summary>
-    /// Создаёт модель представления главного окна и строит меню согласно роли пользователя.
-    /// </summary>
-    /// <param name="services">Сервисы приложения.</param>
     public ShellViewModel(AppServices services)
     {
         _userSessionHolder = services.UserSessionHolder;
@@ -40,29 +30,14 @@ public sealed class ShellViewModel : ViewModelBase
         SelectedItem = Items[0];
     }
 
-    /// <summary>
-    /// Полное имя авторизованного пользователя.
-    /// </summary>
     public string UserFullName { get; }
 
-    /// <summary>
-    /// Роль авторизованного пользователя.
-    /// </summary>
     public string UserRole { get; }
 
-    /// <summary>
-    /// Название программы.
-    /// </summary>
     public string Title => ApplicationTitle;
 
-    /// <summary>
-    /// Пункты меню, доступные текущей роли.
-    /// </summary>
     public ObservableCollection<NavigationItem> Items { get; }
 
-    /// <summary>
-    /// Выбранный пункт меню. Его смена открывает соответствующую страницу.
-    /// </summary>
     public NavigationItem? SelectedItem
     {
         get => _selectedItem;
@@ -77,21 +52,10 @@ public sealed class ShellViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Команда завершения сеанса пользователя.
-    /// </summary>
     public RelayCommand LogOutCommand { get; }
 
-    /// <summary>
-    /// Служба навигации, текущая страница которой отображается в области содержимого.
-    /// </summary>
     public NavigationService Navigation => _navigationService;
 
-    /// <summary>
-    /// Формирует меню навигации в зависимости от роли пользователя.
-    /// </summary>
-    /// <param name="services">Сервисы приложения.</param>
-    /// <returns>Коллекция пунктов меню.</returns>
     private static ObservableCollection<NavigationItem> BuildMenu(AppServices services)
     {
         var session = services.UserSessionHolder.CurrentUser;
@@ -105,11 +69,6 @@ public sealed class ShellViewModel : ViewModelBase
         };
     }
 
-    /// <summary>
-    /// Формирует меню клиента.
-    /// </summary>
-    /// <param name="services">Сервисы приложения.</param>
-    /// <returns>Коллекция пунктов меню клиента.</returns>
     private static ObservableCollection<NavigationItem> BuildClientMenu(AppServices services)
     {
         var overview = new ClientOverviewViewModel(services.ClientService, services.UserSessionHolder);
@@ -122,47 +81,29 @@ public sealed class ShellViewModel : ViewModelBase
         ];
     }
 
-    /// <summary>
-    /// Формирует меню кредитного специалиста.
-    /// </summary>
-    /// <param name="services">Сервисы приложения.</param>
-    /// <returns>Коллекция пунктов меню кредитного специалиста.</returns>
     private static ObservableCollection<NavigationItem> BuildSpecialistMenu(AppServices services) =>
     [
         new NavigationItem("Очередь заявок", new ApplicationQueueViewModel(services.CreditSpecialistService, services.UserSessionHolder, services.Navigation)),
         new NavigationItem("Кредиты и платежи", new CreditPortfolioViewModel(services.CreditSpecialistService, services.UserSessionHolder))
     ];
 
-    /// <summary>
-    /// Формирует меню администратора.
-    /// </summary>
-    /// <param name="services">Сервисы приложения.</param>
-    /// <returns>Коллекция пунктов меню администратора.</returns>
     private static ObservableCollection<NavigationItem> BuildAdministratorMenu(AppServices services) =>
     [
         new NavigationItem("Пользователи", new UserManagementViewModel(services.AdminService, services.UserSessionHolder)),
         new NavigationItem("Кредитные продукты", new ProductManagementViewModel(services.AdminService))
     ];
 
-    /// <summary>
-    /// Признак завершения сеанса. Значение true сигнализирует главному окну о том, что его нужно закрыть.
-    /// </summary>
     public bool IsSignedOut
     {
         get => _isSignedOut;
         private set => SetProperty(ref _isSignedOut, value);
     }
 
-    /// <summary>
-    /// Завершает сеанс пользователя.
-    /// </summary>
     private void LogOut()
     {
         _navigationService.Reset();
         _userSessionHolder.SignOut();
 
-        // Сигнал окну закрыться: без него главное окно оставалось открытым
-        // уже без сеанса, и цикл входа в приложение не запускал окно входа заново.
         IsSignedOut = true;
     }
 }
